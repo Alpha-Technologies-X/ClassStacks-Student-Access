@@ -318,6 +318,15 @@
             background: var(--primary);
             color: white;
         }
+
+        .restriction-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -347,7 +356,7 @@
             
             <div style="margin-top: 25px; padding: 20px; background: #f8f9fa; border-radius: 10px; font-size: 14px;">
                 <strong>Demo Access:</strong><br>
-                Name: Any name<br>
+                Name: <code>demo</code><br>
                 Class Code: <code>CS2024</code>
             </div>
         </div>
@@ -368,7 +377,7 @@
         
         <div class="browser-controls">
             <div class="url-input-container">
-                <input type="text" class="url-input" id="browserUrl" placeholder="Type any website URL and press Enter (e.g., google.com, youtube.com, wikipedia.org)">
+                <input type="text" class="url-input" id="browserUrl" placeholder="Type any website URL and press Enter (e.g., google.com, youtube.com)">
                 <button class="go-button" onclick="navigateToUrl()">Go</button>
             </div>
             <button class="btn" onclick="goHome()">🏠 Home</button>
@@ -378,7 +387,7 @@
             <div class="blocked-message" id="blockedMessage">
                 <div class="blocked-icon">🚫</div>
                 <h2>Website Blocked</h2>
-                <p>This website has been restricted by your teacher for educational purposes.</p>
+                <p>This website has been restricted by your teacher.</p>
                 <p id="blockedUrlText" style="font-family: monospace; margin: 10px 0; font-size: 1.1rem;"></p>
                 <button class="btn" onclick="closeBlockedMessage()" style="margin-top: 20px;">Return to Safe Browsing</button>
             </div>
@@ -401,7 +410,12 @@
             <div class="home-screen" id="homeScreen">
                 <div class="welcome-message">
                     Welcome to Class Stacks Browser!<br>
-                    <small style="font-size: 1rem; color: #666;">Type any website URL above or click on a website below to get started.</small>
+                    <small style="font-size: 1rem; color: #666;">Type any website URL above or click on a website below.</small>
+                </div>
+
+                <div id="restrictionNotice" class="restriction-notice" style="display: none;">
+                    <h4>🔒 Restricted Mode Active</h4>
+                    <p>Your teacher has enabled website restrictions. Some sites may be blocked for educational purposes.</p>
                 </div>
                 
                 <div class="url-examples">
@@ -411,7 +425,6 @@
                     <span class="url-example" onclick="visitWebsite('wikipedia.org')">wikipedia.org</span>
                     <span class="url-example" onclick="visitWebsite('khanacademy.org')">khanacademy.org</span>
                     <span class="url-example" onclick="visitWebsite('github.com')">github.com</span>
-                    <span class="url-example" onclick="visitWebsite('stackoverflow.com')">stackoverflow.com</span>
                 </div>
                 
                 <div class="website-list">
@@ -429,32 +442,6 @@
                             <div class="website-item" onclick="visitWebsite('https://www.wikipedia.org')">
                                 <div class="website-icon">📚</div>
                                 <div>Wikipedia</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.duolingo.com')">
-                                <div class="website-icon">🗣️</div>
-                                <div>Duolingo</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="website-category">
-                        <h3>🎓 Educational Sites</h3>
-                        <div class="website-grid">
-                            <div class="website-item" onclick="visitWebsite('https://www.khanacademy.org')">
-                                <div class="website-icon">🎓</div>
-                                <div>Khan Academy</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.coursera.org')">
-                                <div class="website-icon">📖</div>
-                                <div>Coursera</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.edx.org')">
-                                <div class="website-icon">🏫</div>
-                                <div>edX</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.quizlet.com')">
-                                <div class="website-icon">📝</div>
-                                <div>Quizlet</div>
                             </div>
                         </div>
                     </div>
@@ -476,23 +463,16 @@
     <script>
         let currentStudent = null;
         let isRestricted = false;
-        let lastForceUpdate = 0;
+        let lastUpdateCheck = 0;
         let lastMessageCheck = 0;
+        let studentId = null;
         
-        // Check if student is restricted
-        function checkRestrictionStatus() {
-            const restrictedStudents = JSON.parse(localStorage.getItem('restrictedStudents') || '{}');
-            if (currentStudent && restrictedStudents[currentStudent.id]) {
-                isRestricted = restrictedStudents[currentStudent.id];
-            }
-            return isRestricted;
-        }
-
         // Check for existing session on page load
         document.addEventListener('DOMContentLoaded', function() {
             const savedStudent = localStorage.getItem('currentStudent');
             if (savedStudent) {
                 currentStudent = JSON.parse(savedStudent);
+                studentId = currentStudent.id;
                 showStudentBrowser();
             }
         });
@@ -505,8 +485,11 @@
             const classCode = document.getElementById('classCode').value;
             
             if (studentName && classCode) {
+                // Use consistent student ID based on name and class code
+                studentId = 'student_' + btoa(studentName + classCode).replace(/[^a-zA-Z0-9]/g, '');
+                
                 currentStudent = {
-                    id: 'student_' + Date.now(),
+                    id: studentId,
                     name: studentName,
                     classCode: classCode,
                     lastActive: Date.now(),
@@ -514,7 +497,7 @@
                 };
                 
                 // Save student data
-                localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+                localStorage.setItem(studentId, JSON.stringify(currentStudent));
                 localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
                 showStudentBrowser();
             } else {
@@ -543,13 +526,10 @@
         }
         
         function startActivityReporting() {
-            // Report activity every 10 seconds
+            // Report activity every 5 seconds
             setInterval(() => {
                 reportStudentActivity();
-            }, 10000);
-            
-            // Report on focus
-            window.addEventListener('focus', reportStudentActivity);
+            }, 5000);
         }
         
         function reportStudentActivity() {
@@ -558,7 +538,7 @@
             currentStudent.lastActive = Date.now();
             currentStudent.active = true;
             currentStudent.isRestricted = isRestricted;
-            localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+            localStorage.setItem(studentId, JSON.stringify(currentStudent));
             localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
         }
         
@@ -573,34 +553,29 @@
             
             if (!url) return;
 
-            // Add protocol if missing and clean up the URL
+            // Add protocol if missing
             let fullUrl = url;
             if (!url.startsWith('http')) {
                 fullUrl = 'https://' + url;
             }
-
-            // Clean up the URL - remove www. if present for consistency
-            fullUrl = fullUrl.replace('http://', 'https://').replace('www.', '');
-
-            // Show loading message
-            document.getElementById('loadingMessage').style.display = 'block';
-            document.getElementById('homeScreen').style.display = 'none';
-            document.getElementById('blockedMessage').style.display = 'none';
-            document.getElementById('browserFrame').style.display = 'none';
-            document.getElementById('iframeFallback').style.display = 'none';
 
             // Extract domain for blocking check
             const domain = extractDomain(fullUrl);
             
             // Check if website is blocked (only if student is restricted)
             if (isRestricted && isUrlBlocked(domain)) {
-                setTimeout(() => {
-                    showBlockedMessage(domain);
-                }, 1000);
+                showBlockedMessage(domain);
                 return;
             }
             
-            // Try to load in iframe, but have fallback for sites that block iframes
+            // Show loading message
+            document.getElementById('loadingMessage').style.display = 'block';
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('blockedMessage').style.display = 'none';
+            document.getElementById('browserFrame').style.display = 'none';
+            document.getElementById('iframeFallback').style.display = 'none';
+            
+            // Try to load in iframe
             setTimeout(() => {
                 const frame = document.getElementById('browserFrame');
                 frame.style.display = 'block';
@@ -608,38 +583,22 @@
                 // Set the iframe source
                 frame.src = fullUrl;
                 
-                // Check if iframe loaded successfully
                 frame.onload = function() {
                     document.getElementById('loadingMessage').style.display = 'none';
-                    // Successfully loaded in iframe
                 };
                 
                 frame.onerror = function() {
-                    // If iframe fails, show fallback with external link
+                    // If iframe fails, show fallback
                     document.getElementById('loadingMessage').style.display = 'none';
                     document.getElementById('browserFrame').style.display = 'none';
                     document.getElementById('iframeFallback').style.display = 'block';
                     document.getElementById('fallbackUrl').textContent = fullUrl;
-                    
-                    // Open in new tab as fallback
                     window.open(fullUrl, '_blank');
                 };
                 
-                // Also set a timeout in case the iframe never loads
-                setTimeout(() => {
-                    if (document.getElementById('loadingMessage').style.display !== 'none') {
-                        // If still loading after 5 seconds, assume iframe is blocked
-                        document.getElementById('loadingMessage').style.display = 'none';
-                        document.getElementById('browserFrame').style.display = 'none';
-                        document.getElementById('iframeFallback').style.display = 'block';
-                        document.getElementById('fallbackUrl').textContent = fullUrl;
-                        window.open(fullUrl, '_blank');
-                    }
-                }, 5000);
-                
                 // Update student activity
                 currentStudent.currentUrl = domain;
-                localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+                localStorage.setItem(studentId, JSON.stringify(currentStudent));
                 localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
             }, 500);
         }
@@ -649,30 +608,27 @@
                 const domain = new URL(url).hostname;
                 return domain.replace('www.', '');
             } catch (e) {
-                // If URL parsing fails, try to extract domain manually
                 const match = url.match(/(?:https?:\/\/)?(?:www\.)?([^\/]+)/i);
                 return match ? match[1] : url;
             }
         }
         
         function isUrlBlocked(domain) {
-            if (!isRestricted) return false; // Only block if student is restricted
+            if (!isRestricted) return false;
             
             const blockedSites = JSON.parse(localStorage.getItem('blockedSites') || '[]');
             return blockedSites.some(site => domain.toLowerCase().includes(site.toLowerCase()));
         }
         
         function showBlockedMessage(url) {
-            document.getElementById('loadingMessage').style.display = 'none';
             document.getElementById('blockedMessage').style.display = 'flex';
             document.getElementById('homeScreen').style.display = 'none';
             document.getElementById('browserFrame').style.display = 'none';
             document.getElementById('iframeFallback').style.display = 'none';
             document.getElementById('blockedUrlText').textContent = url;
             
-            // Update student activity
             currentStudent.currentUrl = 'BLOCKED: ' + url;
-            localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+            localStorage.setItem(studentId, JSON.stringify(currentStudent));
             localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
         }
         
@@ -682,7 +638,7 @@
             document.getElementById('browserUrl').value = '';
             
             currentStudent.currentUrl = '';
-            localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+            localStorage.setItem(studentId, JSON.stringify(currentStudent));
             localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
         }
         
@@ -695,14 +651,14 @@
             document.getElementById('browserUrl').value = '';
             
             currentStudent.currentUrl = '';
-            localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+            localStorage.setItem(studentId, JSON.stringify(currentStudent));
             localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
         }
         
         function logout() {
             if (currentStudent) {
                 currentStudent.active = false;
-                localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+                localStorage.setItem(studentId, JSON.stringify(currentStudent));
             }
             
             localStorage.removeItem('currentStudent');
@@ -711,6 +667,7 @@
             document.getElementById('authForm').reset();
             currentStudent = null;
             isRestricted = false;
+            studentId = null;
         }
         
         // Handle Enter key in URL input
@@ -720,54 +677,38 @@
             }
         });
 
-        // Listen for restriction changes from teacher
-        function checkForRestrictionUpdates() {
+        // Check for restriction updates
+        function checkRestrictionStatus() {
             const restrictedStudents = JSON.parse(localStorage.getItem('restrictedStudents') || '{}');
-            const forceUpdate = localStorage.getItem('forceStudentUpdate');
+            const wasRestricted = isRestricted;
+            isRestricted = restrictedStudents[studentId] || false;
             
-            // Check if teacher forced an update
-            if (forceUpdate && forceUpdate > lastForceUpdate) {
-                lastForceUpdate = forceUpdate;
-                checkRestrictionStatus();
-                if (isRestricted) {
-                    showRestrictionNotice();
-                }
+            // Show/hide restriction notice
+            const notice = document.getElementById('restrictionNotice');
+            if (isRestricted) {
+                notice.style.display = 'block';
+            } else {
+                notice.style.display = 'none';
             }
             
-            // Check restriction status
-            if (currentStudent && restrictedStudents[currentStudent.id] !== undefined) {
-                const wasRestricted = isRestricted;
-                isRestricted = restrictedStudents[currentStudent.id];
-                
-                if (isRestricted && !wasRestricted) {
-                    showRestrictionNotice();
-                }
-            }
-        }
-
-        function showRestrictionNotice() {
-            alert('🔒 TEACHER NOTICE: Your browsing has been restricted to educational sites only.');
-            
-            // If currently on a blocked site, go home
-            const currentUrl = document.getElementById('browserUrl').value;
-            if (currentUrl && isUrlBlocked(extractDomain(currentUrl))) {
-                showBlockedMessage(currentUrl);
+            // Show notice if just restricted
+            if (isRestricted && !wasRestricted) {
+                alert('🔒 TEACHER NOTICE: Your browsing has been restricted to educational sites only.');
             }
         }
 
         // Check for new messages from teacher
         function checkForMessages() {
-            if (!currentStudent) return;
+            if (!studentId) return;
 
-            const messageKey = 'newMessage_' + currentStudent.id;
+            const messageKey = 'newMessage_' + studentId;
             const lastMessageTime = localStorage.getItem(messageKey);
             
             if (lastMessageTime && lastMessageTime > lastMessageCheck) {
                 lastMessageCheck = lastMessageTime;
                 
-                // Get the latest message
                 const messages = JSON.parse(localStorage.getItem('teacherMessages') || '{}');
-                const studentMessages = messages[currentStudent.id];
+                const studentMessages = messages[studentId];
                 
                 if (studentMessages && studentMessages.length > 0) {
                     const latestMessage = studentMessages[studentMessages.length - 1];
@@ -788,22 +729,29 @@
 
         // Check for updates every 2 seconds
         setInterval(() => {
-            checkForRestrictionUpdates();
+            checkRestrictionStatus();
             checkForMessages();
             reportStudentActivity();
+            
+            // Check for teacher updates
+            const lastUpdate = localStorage.getItem('lastUpdate');
+            if (lastUpdate && lastUpdate > lastUpdateCheck) {
+                lastUpdateCheck = lastUpdate;
+                checkRestrictionStatus();
+            }
         }, 2000);
         
         // Listen for storage changes (cross-device communication)
         window.addEventListener('storage', function(e) {
-            if (e.key === 'forceStudentUpdate') {
-                checkForRestrictionUpdates();
+            if (e.key === 'lastUpdate') {
+                checkRestrictionStatus();
             }
             if (e.key && e.key.startsWith('newMessage_')) {
                 checkForMessages();
             }
         });
         
-        // Initialize home screen
+        // Initialize
         goHome();
     </script>
 </body>
