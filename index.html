@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Stacks - Student Browser</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --danger: #e63946;
+            --success: #2a9d8f;
+            --dark: #212529;
+            --light: #f8f9fa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: #f5f7fb;
+            color: var(--dark);
+        }
+        
+        .auth-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .auth-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5ee;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+        
+        .btn {
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background: var(--secondary);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+        }
+        
+        .error-message {
+            color: var(--danger);
+            text-align: center;
+            margin-top: 15px;
+            padding: 12px;
+            background: #ffeaea;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .student-browser {
+            display: none;
+        }
+        
+        .browser-header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .student-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            z-index: 1000;
+        }
+        
+        .browser-controls {
+            display: flex;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .url-input-container {
+            flex: 1;
+            display: flex;
+            background: white;
+            border: 2px solid #e1e5ee;
+            border-radius: 25px;
+            overflow: hidden;
+        }
+        
+        .url-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            font-size: 16px;
+        }
+        
+        .url-input:focus {
+            outline: none;
+        }
+        
+        .go-button {
+            padding: 12px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .browser-content {
+            height: calc(100vh - 160px);
+            background: white;
+        }
+        
+        .website-list {
+            padding: 30px;
+        }
+        
+        .website-category {
+            margin-bottom: 30px;
+        }
+        
+        .website-category h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+        
+        .website-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .website-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .website-item:hover {
+            background: white;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .website-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .blocked-message {
+            display: none;
+            background: #ffebee;
+            color: #c62828;
+            padding: 40px;
+            text-align: center;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .blocked-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .browser-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .home-screen {
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .welcome-message {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 30px;
+        }
+
+        .loading-message {
+            display: none;
+            padding: 40px;
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .iframe-fallback {
+            display: none;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .iframe-fallback a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .iframe-fallback a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- Student Authentication -->
+    <div class="auth-container" id="authContainer">
+        <div class="auth-box">
+            <div class="logo">
+                <h1>🎓 Class Stacks</h1>
+                <p>Student Browser</p>
+            </div>
+            
+            <form id="authForm">
+                <div class="form-group">
+                    <label for="studentName">Your Name</label>
+                    <input type="text" id="studentName" placeholder="Enter your name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="classCode">Class Code</label>
+                    <input type="text" id="classCode" placeholder="Enter class code from teacher" required>
+                </div>
+                
+                <button type="submit" class="btn">Enter Browser</button>
+            </form>
+            
+            <div class="error-message" id="errorMessage"></div>
+            
+            <div style="margin-top: 25px; padding: 20px; background: #f8f9fa; border-radius: 10px; font-size: 14px;">
+                <strong>Demo Access:</strong><br>
+                Name: Any name<br>
+                Class Code: <code>CS2024</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Browser -->
+    <div class="student-browser" id="studentBrowser">
+        <div class="student-info">
+            Student: <span id="studentNameDisplay">Unknown</span> | 
+            Class: <span id="classCodeDisplay">Unknown</span>
+            <button class="btn-danger" onclick="logout()" style="margin-left: 10px; padding: 5px 10px; font-size: 0.8rem;">Exit</button>
+        </div>
+        
+        <div class="browser-header">
+            <h2>🔒 Class Stacks Secure Browser</h2>
+            <p>Teacher Monitored • Educational Focus</p>
+        </div>
+        
+        <div class="browser-controls">
+            <div class="url-input-container">
+                <input type="text" class="url-input" id="browserUrl" placeholder="Enter any website URL (google.com, youtube.com, etc.)">
+                <button class="go-button" onclick="navigateToUrl()">Go</button>
+            </div>
+            <button class="btn" onclick="goHome()">🏠 Home</button>
+        </div>
+        
+        <div class="browser-content" id="browserContent">
+            <div class="blocked-message" id="blockedMessage">
+                <div class="blocked-icon">🚫</div>
+                <h2>Website Blocked</h2>
+                <p>This website has been restricted by your teacher for educational purposes.</p>
+                <p id="blockedUrlText" style="font-family: monospace; margin: 10px 0; font-size: 1.1rem;"></p>
+                <button class="btn" onclick="closeBlockedMessage()" style="margin-top: 20px;">Return to Safe Browsing</button>
+            </div>
+            
+            <div class="loading-message" id="loadingMessage">
+                <div style="font-size: 3rem; margin-bottom: 20px;">⏳</div>
+                <h3>Loading Website...</h3>
+                <p>Please wait while we load the website securely.</p>
+            </div>
+
+            <div class="iframe-fallback" id="iframeFallback">
+                <div style="font-size: 3rem; margin-bottom: 20px;">🌐</div>
+                <h3>Website Loaded in New Tab</h3>
+                <p>This website doesn't allow embedding for security reasons.</p>
+                <p>It has been opened in a new browser tab for you.</p>
+                <p id="fallbackUrl" style="margin: 15px 0; font-family: monospace;"></p>
+                <button class="btn" onclick="goHome()" style="margin-top: 20px;">Return to Browser Home</button>
+            </div>
+            
+            <div class="home-screen" id="homeScreen">
+                <div class="welcome-message">
+                    Welcome to Class Stacks Browser!<br>
+                    <small style="font-size: 1rem; color: #666;">You can visit any website. Teacher can monitor your activity.</small>
+                </div>
+                
+                <div class="website-list">
+                    <div class="website-category">
+                        <h3>🌐 Popular Websites</h3>
+                        <div class="website-grid">
+                            <div class="website-item" onclick="visitWebsite('https://www.google.com')">
+                                <div class="website-icon">🔍</div>
+                                <div>Google</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.youtube.com')">
+                                <div class="website-icon">📺</div>
+                                <div>YouTube</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.wikipedia.org')">
+                                <div class="website-icon">📚</div>
+                                <div>Wikipedia</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.duolingo.com')">
+                                <div class="website-icon">🗣️</div>
+                                <div>Duolingo</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="website-category">
+                        <h3>🎓 Educational Sites</h3>
+                        <div class="website-grid">
+                            <div class="website-item" onclick="visitWebsite('https://www.khanacademy.org')">
+                                <div class="website-icon">🎓</div>
+                                <div>Khan Academy</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.coursera.org')">
+                                <div class="website-icon">📖</div>
+                                <div>Coursera</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.edx.org')">
+                                <div class="website-icon">🏫</div>
+                                <div>edX</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.quizlet.com')">
+                                <div class="website-icon">📝</div>
+                                <div>Quizlet</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="website-category">
+                        <h3>💼 Productivity Tools</h3>
+                        <div class="website-grid">
+                            <div class="website-item" onclick="visitWebsite('https://www.canva.com')">
+                                <div class="website-icon">🎨</div>
+                                <div>Canva</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.notion.so')">
+                                <div class="website-icon">📋</div>
+                                <div>Notion</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.trello.com')">
+                                <div class="website-icon">📊</div>
+                                <div>Trello</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.slack.com')">
+                                <div class="website-icon">💬</div>
+                                <div>Slack</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="website-category">
+                        <h3>🔧 Development & Tech</h3>
+                        <div class="website-grid">
+                            <div class="website-item" onclick="visitWebsite('https://www.github.com')">
+                                <div class="website-icon">💻</div>
+                                <div>GitHub</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://stackoverflow.com')">
+                                <div class="website-icon">❓</div>
+                                <div>Stack Overflow</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.w3schools.com')">
+                                <div class="website-icon">🌐</div>
+                                <div>W3Schools</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://codepen.io')">
+                                <div class="website-icon">✏️</div>
+                                <div>CodePen</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <iframe class="browser-frame" id="browserFrame" style="display: none;"></iframe>
+        </div>
+    </div>
+
+    <script>
+        let currentStudent = null;
+        let isRestricted = false;
+        let lastForceUpdate = 0;
+        
+        // Check if student is restricted
+        function checkRestrictionStatus() {
+            const restrictedStudents = JSON.parse(localStorage.getItem('restrictedStudents') || '{}');
+            if (currentStudent && restrictedStudents[currentStudent.id]) {
+                isRestricted = restrictedStudents[currentStudent.id];
+            }
+            return isRestricted;
+        }
+
+        // Student authentication
+        document.getElementById('authForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const studentName = document.getElementById('studentName').value;
+            const classCode = document.getElementById('classCode').value;
+            
+            if (studentName && classCode) {
+                currentStudent = {
+                    id: 'student_' + Date.now(),
+                    name: studentName,
+                    classCode: classCode,
+                    lastActive: Date.now(),
+                    currentUrl: ''
+                };
+                
+                // Save student data
+                localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+                showStudentBrowser();
+            } else {
+                showError('Please enter your name and class code');
+            }
+        });
+        
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            setTimeout(() => errorElement.style.display = 'none', 3000);
+        }
+        
+        function showStudentBrowser() {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('studentBrowser').style.display = 'block';
+            document.getElementById('studentNameDisplay').textContent = currentStudent.name;
+            document.getElementById('classCodeDisplay').textContent = currentStudent.classCode;
+            
+            // Check restriction status
+            checkRestrictionStatus();
+            
+            // Start activity reporting
+            startActivityReporting();
+        }
+        
+        function startActivityReporting() {
+            // Report activity every 10 seconds
+            setInterval(() => {
+                reportStudentActivity();
+            }, 10000);
+            
+            // Report on focus
+            window.addEventListener('focus', reportStudentActivity);
+        }
+        
+        function reportStudentActivity() {
+            if (!currentStudent) return;
+            
+            currentStudent.lastActive = Date.now();
+            currentStudent.active = true;
+            currentStudent.isRestricted = isRestricted;
+            localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+        }
+        
+        function visitWebsite(url) {
+            document.getElementById('browserUrl').value = url;
+            navigateToUrl();
+        }
+        
+        function navigateToUrl() {
+            const url = document.getElementById('browserUrl').value.trim();
+            
+            if (!url) return;
+            
+            // Add protocol if missing
+            let fullUrl = url;
+            if (!url.startsWith('http')) {
+                fullUrl = 'https://' + url;
+            }
+
+            // Show loading message
+            document.getElementById('loadingMessage').style.display = 'block';
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('blockedMessage').style.display = 'none';
+            document.getElementById('browserFrame').style.display = 'none';
+            document.getElementById('iframeFallback').style.display = 'none';
+
+            // Check if website is blocked (only if student is restricted)
+            if (isRestricted && isUrlBlocked(url)) {
+                setTimeout(() => {
+                    showBlockedMessage(url);
+                }, 1000);
+                return;
+            }
+            
+            // Try to load in iframe, but have fallback for sites that block iframes
+            setTimeout(() => {
+                const frame = document.getElementById('browserFrame');
+                frame.style.display = 'block';
+                frame.src = fullUrl;
+                
+                // Check if iframe loaded successfully
+                frame.onload = function() {
+                    document.getElementById('loadingMessage').style.display = 'none';
+                };
+                
+                frame.onerror = function() {
+                    // If iframe fails, show fallback with external link
+                    document.getElementById('loadingMessage').style.display = 'none';
+                    document.getElementById('browserFrame').style.display = 'none';
+                    document.getElementById('iframeFallback').style.display = 'block';
+                    document.getElementById('fallbackUrl').textContent = fullUrl;
+                    
+                    // Open in new tab as fallback
+                    window.open(fullUrl, '_blank');
+                };
+                
+                // Update student activity
+                currentStudent.currentUrl = url;
+                localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+            }, 1500);
+        }
+        
+        function isUrlBlocked(url) {
+            if (!isRestricted) return false; // Only block if student is restricted
+            
+            const blockedSites = JSON.parse(localStorage.getItem('blockedSites') || '[]');
+            const restrictedModeSites = [
+                'youtube.com', 'facebook.com', 'tiktok.com', 'instagram.com',
+                'netflix.com', 'twitter.com', 'reddit.com', 'discord.com'
+            ];
+            
+            const allBlockedSites = [...blockedSites, ...restrictedModeSites];
+            return allBlockedSites.some(site => url.toLowerCase().includes(site));
+        }
+        
+        function showBlockedMessage(url) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('blockedMessage').style.display = 'flex';
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('browserFrame').style.display = 'none';
+            document.getElementById('iframeFallback').style.display = 'none';
+            document.getElementById('blockedUrlText').textContent = url;
+            
+            // Update student activity
+            currentStudent.currentUrl = 'BLOCKED: ' + url;
+            localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+        }
+        
+        function closeBlockedMessage() {
+            document.getElementById('blockedMessage').style.display = 'none';
+            document.getElementById('homeScreen').style.display = 'block';
+            document.getElementById('browserUrl').value = '';
+            
+            currentStudent.currentUrl = '';
+            localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+        }
+        
+        function goHome() {
+            document.getElementById('browserFrame').style.display = 'none';
+            document.getElementById('blockedMessage').style.display = 'none';
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('iframeFallback').style.display = 'none';
+            document.getElementById('homeScreen').style.display = 'block';
+            document.getElementById('browserUrl').value = '';
+            
+            currentStudent.currentUrl = '';
+            localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+        }
+        
+        function logout() {
+            if (currentStudent) {
+                currentStudent.active = false;
+                localStorage.setItem(currentStudent.id, JSON.stringify(currentStudent));
+            }
+            
+            document.getElementById('studentBrowser').style.display = 'none';
+            document.getElementById('authContainer').style.display = 'flex';
+            document.getElementById('authForm').reset();
+            currentStudent = null;
+            isRestricted = false;
+        }
+        
+        // Handle Enter key in URL input
+        document.getElementById('browserUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                navigateToUrl();
+            }
+        });
+
+        // Listen for restriction changes from teacher
+        function checkForRestrictionUpdates() {
+            const restrictedStudents = JSON.parse(localStorage.getItem('restrictedStudents') || '{}');
+            const forceUpdate = localStorage.getItem('forceStudentUpdate');
+            
+            // Check if teacher forced an update
+            if (forceUpdate && forceUpdate > lastForceUpdate) {
+                lastForceUpdate = forceUpdate;
+                checkRestrictionStatus();
+                if (isRestricted) {
+                    showRestrictionNotice();
+                }
+            }
+            
+            // Check restriction status
+            if (currentStudent && restrictedStudents[currentStudent.id] !== undefined) {
+                const wasRestricted = isRestricted;
+                isRestricted = restrictedStudents[currentStudent.id];
+                
+                if (isRestricted && !wasRestricted) {
+                    showRestrictionNotice();
+                }
+            }
+        }
+
+        function showRestrictionNotice() {
+            alert('🔒 TEACHER NOTICE: Your browsing has been restricted to educational sites only.\n\nBlocked sites include: YouTube, Facebook, TikTok, Instagram, Netflix, etc.');
+            
+            // If currently on a blocked site, go home
+            const currentUrl = document.getElementById('browserUrl').value;
+            if (currentUrl && isUrlBlocked(currentUrl)) {
+                showBlockedMessage(currentUrl);
+            }
+        }
+
+        // Check for updates every 2 seconds
+        setInterval(checkForRestrictionUpdates, 2000);
+        
+        // Initialize home screen
+        goHome();
+    </script>
+</body>
+</html>
