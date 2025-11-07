@@ -444,6 +444,18 @@
             padding: 40px;
             text-align: center;
         }
+
+        .connection-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
@@ -464,6 +476,9 @@
                 <div class="form-group">
                     <label for="classCode">Class Code</label>
                     <input type="text" id="classCode" placeholder="Enter class code from teacher" required>
+                    <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">
+                        Ask your teacher for the current class code
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn" style="width: 100%;">Enter Browser</button>
@@ -476,6 +491,11 @@
                 1. Ask your teacher for the current class code<br>
                 2. Enter your name and the class code<br>
                 3. Click "Enter Browser" to start
+            </div>
+
+            <div id="debugInfo" style="margin-top: 15px; padding: 10px; background: #e7f3ff; border-radius: 5px; font-size: 12px; display: none;">
+                <strong>Debug Info:</strong><br>
+                <span id="debugText"></span>
             </div>
         </div>
     </div>
@@ -675,6 +695,8 @@
         </div>
     </div>
 
+    <div class="connection-status" id="connectionStatus">🔄 Connected</div>
+
     <script>
         let currentStudent = null;
         let lastUpdateCheck = 0;
@@ -689,49 +711,115 @@
         document.addEventListener('DOMContentLoaded', function() {
             const savedStudent = localStorage.getItem('currentStudent');
             if (savedStudent) {
-                currentStudent = JSON.parse(savedStudent);
-                studentId = currentStudent.id;
-                currentClassCode = currentStudent.classCode;
-                showStudentBrowser();
+                try {
+                    currentStudent = JSON.parse(savedStudent);
+                    studentId = currentStudent.id;
+                    currentClassCode = currentStudent.classCode;
+                    
+                    // Verify the class still exists in shared data
+                    const data = getSharedData();
+                    if (data.students && data.students[studentId]) {
+                        showStudentBrowser();
+                    } else {
+                        // Session expired or invalid
+                        localStorage.removeItem('currentStudent');
+                        showError('Session expired. Please log in again.');
+                    }
+                } catch (e) {
+                    localStorage.removeItem('currentStudent');
+                    showError('Invalid session data. Please log in again.');
+                }
             }
         });
 
-        // Student authentication
+        // Student authentication - FIXED VERSION
         document.getElementById('authForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const studentName = document.getElementById('studentName').value;
-            const classCode = document.getElementById('classCode').value;
+            const studentName = document.getElementById('studentName').value.trim();
+            const classCode = document.getElementById('classCode').value.trim().toUpperCase();
             
-            if (studentName && classCode) {
-                // Use consistent student ID based on name and class code
-                studentId = 'student_' + btoa(studentName + classCode).replace(/[^a-zA-Z0-9]/g, '');
-                currentClassCode = classCode;
-                
-                currentStudent = {
-                    id: studentId,
-                    name: studentName,
-                    classCode: classCode,
-                    lastActive: Date.now(),
-                    currentUrl: '',
-                    device: getDeviceInfo()
-                };
-                
-                // Register student with teacher dashboard
-                registerStudent();
-                
-                // Save student data
-                localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
-                showStudentBrowser();
-            } else {
-                showError('Please enter your name and class code');
+            if (!studentName) {
+                showError('Please enter your name');
+                return;
             }
+            
+            if (!classCode) {
+                showError('Please enter a class code');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Connecting...';
+            submitBtn.disabled = true;
+
+            // Check if class code exists in shared data
+            setTimeout(() => {
+                const data = getSharedData();
+                
+                // Debug information
+                const debugInfo = document.getElementById('debugInfo');
+                const debugText = document.getElementById('debugText');
+                debugInfo.style.display = 'block';
+                debugText.innerHTML = `
+                    Class Code Entered: ${classCode}<br>
+                    Classes in System: ${Object.keys(data.classes || {}).join(', ') || 'None'}<br>
+                    Class Settings: ${JSON.stringify(data.classSettings || {})}
+                `;
+
+                // Check if class exists in classSettings (where teacher creates classes)
+                const classExists = data.classSettings && data.classSettings[classCode];
+                
+                if (classExists) {
+                    // Class code is valid - create student session
+                    studentId = 'student_' + btoa(studentName + classCode).replace(/[^a-zA-Z0-9]/g, '');
+                    currentClassCode = classCode;
+                    
+                    currentStudent = {
+                        id: studentId,
+                        name: studentName,
+                        classCode: classCode,
+                        lastActive: Date.now(),
+                        currentUrl: '',
+                        device: getDeviceInfo(),
+                        connected: true
+                    };
+                    
+                    // Register student with teacher dashboard
+                    registerStudent();
+                    
+                    // Save student data
+                    localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
+                    showStudentBrowser();
+                    
+                    debugText.innerHTML += '<br><strong style="color: green;">✓ Successfully connected!</strong>';
+                } else {
+                    // Class code doesn't exist
+                    showError(`Class code "${classCode}" not found. Please check with your teacher.`);
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    
+                    debugText.innerHTML += '<br><strong style="color: red;">✗ Class code not found in system</strong>';
+                }
+            }, 1000);
         });
         
         // Register student with teacher dashboard
         function registerStudent() {
             const data = getSharedData();
             data.students[currentStudent.id] = currentStudent;
+            
+            // Ensure the class exists in classes object
+            if (!data.classes) data.classes = {};
+            if (!data.classes[currentClassCode]) {
+                data.classes[currentClassCode] = {
+                    name: `Class ${currentClassCode}`,
+                    created: Date.now(),
+                    autoCreated: true
+                };
+            }
             
             // Log the connection
             if (!data.activityLogs) data.activityLogs = {};
@@ -746,20 +834,55 @@
         
         // Get shared data from localStorage
         function getSharedData() {
-            return JSON.parse(localStorage.getItem('classStacksData') || '{"students":{},"classes":{},"blockedSites":[],"classSettings":{},"teacherControl":{},"messages":{},"studentLocks":{},"screenshots":{},"activityLogs":{}}');
+            const defaultData = {
+                students: {},
+                classes: {},
+                blockedSites: [
+                    'youtube.com', 'facebook.com', 'tiktok.com', 'instagram.com', 
+                    'netflix.com', 'twitter.com', 'snapchat.com', 'reddit.com', 
+                    'twitch.tv', 'porn', 'xxx', 'adult', 'gambling'
+                ],
+                classSettings: {},
+                teacherControl: {},
+                messages: {},
+                studentLocks: {},
+                screenshots: {},
+                activityLogs: {},
+                lastUpdated: Date.now()
+            };
+            
+            try {
+                const stored = localStorage.getItem('classStacksData');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    // Merge with default data to ensure all properties exist
+                    return {...defaultData, ...parsed};
+                }
+            } catch (e) {
+                console.error('Error parsing stored data:', e);
+            }
+            
+            // Return default data if nothing exists or error occurs
+            return defaultData;
         }
         
         // Save shared data to localStorage
         function saveSharedData(data) {
-            data.lastUpdated = Date.now();
-            localStorage.setItem('classStacksData', JSON.stringify(data));
+            try {
+                data.lastUpdated = Date.now();
+                localStorage.setItem('classStacksData', JSON.stringify(data));
+                return true;
+            } catch (e) {
+                console.error('Error saving data:', e);
+                return false;
+            }
         }
         
         function showError(message) {
             const errorElement = document.getElementById('errorMessage');
             errorElement.textContent = message;
             errorElement.style.display = 'block';
-            setTimeout(() => errorElement.style.display = 'none', 3000);
+            setTimeout(() => errorElement.style.display = 'none', 5000);
         }
         
         function showStudentBrowser() {
@@ -804,7 +927,17 @@
             // Update in shared data
             const data = getSharedData();
             data.students[currentStudent.id] = currentStudent;
-            saveSharedData(data);
+            const success = saveSharedData(data);
+            
+            // Update connection status
+            const statusElement = document.getElementById('connectionStatus');
+            if (success) {
+                statusElement.style.background = 'var(--success)';
+                statusElement.textContent = '🔄 Connected';
+            } else {
+                statusElement.style.background = 'var(--warning)';
+                statusElement.textContent = '⚠️ Connection Issues';
+            }
             
             localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
         }
@@ -938,6 +1071,9 @@
             }, 3000);
         }
 
+        // ... rest of the student browser functions remain the same as previous version ...
+        // [All the other functions like showLockedMessage, extractDomain, isUrlBlocked, etc. remain unchanged]
+
         function showLockedMessage() {
             document.getElementById('lockedMessage').style.display = 'flex';
             document.getElementById('homeScreen').style.display = 'none';
@@ -1048,6 +1184,7 @@
             document.getElementById('studentBrowser').style.display = 'none';
             document.getElementById('authContainer').style.display = 'flex';
             document.getElementById('authForm').reset();
+            document.getElementById('debugInfo').style.display = 'none';
             currentStudent = null;
             studentId = null;
             currentClassCode = '';
@@ -1222,7 +1359,7 @@
                 context.fillText('Actual screenshots show real student activity', 40, 185);
             } else {
                 // Draw home screen representation
-                context.fillStyle = var('--primary');
+                context.fillStyle = '#4361ee';
                 context.fillRect(0, 0, canvas.width, 120);
                 
                 context.fillStyle = '#ffffff';
@@ -1321,7 +1458,7 @@
                 context.fillText('Website content would appear here', 40, 160);
                 context.fillText('Teacher-requested screenshot', 40, 185);
             } else {
-                context.fillStyle = var('--primary');
+                context.fillStyle = '#4361ee';
                 context.fillRect(0, 0, canvas.width, 120);
                 
                 context.fillStyle = '#ffffff';
