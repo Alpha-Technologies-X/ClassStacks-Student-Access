@@ -234,6 +234,23 @@
             margin-bottom: 20px;
         }
         
+        .locked-message {
+            display: none;
+            background: #e9ecef;
+            color: #6c757d;
+            padding: 40px;
+            text-align: center;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .locked-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
         .browser-frame {
             width: 100%;
             height: 100%;
@@ -336,6 +353,15 @@
             margin: 20px 0;
             text-align: center;
         }
+        
+        .monitoring-notice {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -394,6 +420,14 @@
         </div>
         
         <div class="browser-content" id="browserContent">
+            <div class="locked-message" id="lockedMessage">
+                <div class="locked-icon">🔒</div>
+                <h2>Browser Locked</h2>
+                <p>Your teacher has locked your browser.</p>
+                <p>You cannot access any websites at this time.</p>
+                <button class="btn" onclick="goHome()" style="margin-top: 20px;">Return to Home</button>
+            </div>
+            
             <div class="teacher-control-notice" id="teacherControlNotice" style="display: none;">
                 <h4>🎮 Teacher Navigation</h4>
                 <p>Your teacher is navigating your browser to: <strong id="teacherControlUrl"></strong></p>
@@ -429,6 +463,11 @@
                     <small style="font-size: 1rem; color: #666;">Type any website URL above or click on a website below.</small>
                 </div>
 
+                <div class="monitoring-notice">
+                    <h4>📹 Activity Monitoring Active</h4>
+                    <p>Your teacher can see which websites you're visiting to help with your work.</p>
+                </div>
+
                 <div id="restrictionNotice" class="restriction-notice" style="display: none;">
                     <h4>🔒 Restricted Mode Active</h4>
                     <p>Your teacher has enabled website restrictions. Some sites may be blocked for educational purposes.</p>
@@ -437,7 +476,6 @@
                 <div class="url-examples">
                     <h4>💡 Try these URLs:</h4>
                     <span class="url-example" onclick="visitWebsite('google.com')">google.com</span>
-                    <span class="url-example" onclick="visitWebsite('youtube.com')">youtube.com</span>
                     <span class="url-example" onclick="visitWebsite('wikipedia.org')">wikipedia.org</span>
                     <span class="url-example" onclick="visitWebsite('khanacademy.org')">khanacademy.org</span>
                     <span class="url-example" onclick="visitWebsite('github.com')">github.com</span>
@@ -445,19 +483,19 @@
                 
                 <div class="website-list">
                     <div class="website-category">
-                        <h3>🌐 Popular Websites</h3>
+                        <h3>🌐 Educational Websites</h3>
                         <div class="website-grid">
+                            <div class="website-item" onclick="visitWebsite('https://www.khanacademy.org')">
+                                <div class="website-icon">📚</div>
+                                <div>Khan Academy</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.wikipedia.org')">
+                                <div class="website-icon">🌐</div>
+                                <div>Wikipedia</div>
+                            </div>
                             <div class="website-item" onclick="visitWebsite('https://www.google.com')">
                                 <div class="website-icon">🔍</div>
                                 <div>Google</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.youtube.com')">
-                                <div class="website-icon">📺</div>
-                                <div>YouTube</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.wikipedia.org')">
-                                <div class="website-icon">📚</div>
-                                <div>Wikipedia</div>
                             </div>
                         </div>
                     </div>
@@ -478,12 +516,11 @@
 
     <script>
         let currentStudent = null;
-        let isRestricted = false;
         let lastUpdateCheck = 0;
         let lastMessageCheck = 0;
         let studentId = null;
         let currentClassCode = '';
-        
+
         // Check for existing session on page load
         document.addEventListener('DOMContentLoaded', function() {
             const savedStudent = localStorage.getItem('currentStudent');
@@ -536,7 +573,7 @@
         
         // Get shared data from localStorage
         function getSharedData() {
-            return JSON.parse(localStorage.getItem('classStacksData') || '{"students":{},"blockedSites":[],"restrictedStudents":{},"teacherControl":{}}');
+            return JSON.parse(localStorage.getItem('classStacksData') || '{"students":{},"classes":{},"blockedSites":[],"classSettings":{},"teacherControl":{},"studentLocks":{}}');
         }
         
         // Save shared data to localStorage
@@ -558,9 +595,6 @@
             document.getElementById('studentNameDisplay').textContent = currentStudent.name;
             document.getElementById('classCodeDisplay').textContent = currentStudent.classCode;
             
-            // Check restriction status
-            checkRestrictionStatus();
-            
             // Start activity reporting
             startActivityReporting();
         }
@@ -576,8 +610,6 @@
             if (!currentStudent) return;
             
             currentStudent.lastActive = Date.now();
-            currentStudent.active = true;
-            currentStudent.isRestricted = isRestricted;
             
             // Update in shared data
             const data = getSharedData();
@@ -593,6 +625,16 @@
         }
         
         function navigateToUrl() {
+            // Check if browser is locked
+            const data = getSharedData();
+            const classSettings = data.classSettings && data.classSettings[currentClassCode] ? data.classSettings[currentClassCode] : { allowBrowsing: true };
+            const studentLocked = data.studentLocks && data.studentLocks[studentId];
+            
+            if (classSettings.allowBrowsing === false || studentLocked) {
+                showLockedMessage();
+                return;
+            }
+            
             const urlInput = document.getElementById('browserUrl');
             let url = urlInput.value.trim();
             
@@ -607,8 +649,9 @@
             // Extract domain for blocking check
             const domain = extractDomain(fullUrl);
             
-            // Check if website is blocked (only if student is restricted)
-            if (isRestricted && isUrlBlocked(domain)) {
+            // Check if website is blocked (always check if blocking is enabled for class)
+            const blockingEnabled = classSettings.blockingEnabled !== false; // Default to true
+            if (blockingEnabled && isUrlBlocked(domain)) {
                 showBlockedMessage(domain);
                 return;
             }
@@ -617,6 +660,7 @@
             document.getElementById('loadingMessage').style.display = 'block';
             document.getElementById('homeScreen').style.display = 'none';
             document.getElementById('blockedMessage').style.display = 'none';
+            document.getElementById('lockedMessage').style.display = 'none';
             document.getElementById('browserFrame').style.display = 'none';
             document.getElementById('iframeFallback').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
@@ -643,9 +687,19 @@
                 };
                 
                 // Update student activity
-                currentStudent.currentUrl = domain;
+                currentStudent.currentUrl = fullUrl;
                 updateStudentInSharedData();
             }, 500);
+        }
+
+        function showLockedMessage() {
+            document.getElementById('lockedMessage').style.display = 'flex';
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('blockedMessage').style.display = 'none';
+            document.getElementById('browserFrame').style.display = 'none';
+            document.getElementById('iframeFallback').style.display = 'none';
+            document.getElementById('teacherControlNotice').style.display = 'none';
+            document.getElementById('loadingMessage').style.display = 'none';
         }
 
         function extractDomain(url) {
@@ -659,11 +713,15 @@
         }
         
         function isUrlBlocked(domain) {
-            if (!isRestricted) return false;
-            
             const data = getSharedData();
             const blockedSites = data.blockedSites || [];
-            return blockedSites.some(site => domain.toLowerCase().includes(site.toLowerCase()));
+            
+            // Check if domain contains any blocked site
+            return blockedSites.some(site => {
+                // Check for exact domain match or partial match
+                return domain.toLowerCase().includes(site.toLowerCase()) || 
+                       site.toLowerCase().includes(domain.toLowerCase());
+            });
         }
         
         function showBlockedMessage(url) {
@@ -672,6 +730,7 @@
             document.getElementById('browserFrame').style.display = 'none';
             document.getElementById('iframeFallback').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
+            document.getElementById('lockedMessage').style.display = 'none';
             document.getElementById('blockedUrlText').textContent = url;
             
             currentStudent.currentUrl = 'BLOCKED: ' + url;
@@ -693,6 +752,7 @@
             document.getElementById('loadingMessage').style.display = 'none';
             document.getElementById('iframeFallback').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
+            document.getElementById('lockedMessage').style.display = 'none';
             document.getElementById('homeScreen').style.display = 'block';
             document.getElementById('browserUrl').value = '';
             
@@ -715,7 +775,6 @@
             document.getElementById('authContainer').style.display = 'flex';
             document.getElementById('authForm').reset();
             currentStudent = null;
-            isRestricted = false;
             studentId = null;
             currentClassCode = '';
         }
@@ -730,21 +789,20 @@
         // Check for restriction updates
         function checkRestrictionStatus() {
             const data = getSharedData();
-            const restrictedStudents = data.restrictedStudents || {};
-            const wasRestricted = isRestricted;
-            isRestricted = restrictedStudents[studentId] || false;
+            const classSettings = data.classSettings && data.classSettings[currentClassCode] ? data.classSettings[currentClassCode] : { allowBrowsing: true, blockingEnabled: true };
+            const studentLocked = data.studentLocks && data.studentLocks[studentId];
             
             // Show/hide restriction notice
             const notice = document.getElementById('restrictionNotice');
-            if (isRestricted) {
+            if (classSettings.blockingEnabled) {
                 notice.style.display = 'block';
             } else {
                 notice.style.display = 'none';
             }
             
-            // Show notice if just restricted
-            if (isRestricted && !wasRestricted) {
-                alert('🔒 TEACHER NOTICE: Your browsing has been restricted to educational sites only.');
+            // Show locked message if browser is locked
+            if (classSettings.allowBrowsing === false || studentLocked) {
+                showLockedMessage();
             }
         }
 
