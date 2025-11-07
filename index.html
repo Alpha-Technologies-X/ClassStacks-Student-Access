@@ -373,6 +373,49 @@
             display: inline-block;
             margin: 10px 0;
         }
+
+        .website-view {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+
+        .website-preview {
+            text-align: center;
+            padding: 40px;
+            max-width: 600px;
+        }
+
+        .website-preview-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .website-preview-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .website-preview-url {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            word-break: break-all;
+        }
+
+        .website-preview-status {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -460,13 +503,16 @@
                 <p>Please wait while we load the website securely.</p>
             </div>
 
-            <div class="iframe-fallback" id="iframeFallback">
-                <div style="font-size: 3rem; margin-bottom: 20px;">🌐</div>
-                <h3>Website Loaded in New Tab</h3>
-                <p>This website doesn't allow embedding for security reasons.</p>
-                <p>It has been opened in a new browser tab for you.</p>
-                <p id="fallbackUrl" style="margin: 15px 0; font-family: monospace;"></p>
-                <button class="btn" onclick="goHome()" style="margin-top: 20px;">Return to Browser Home</button>
+            <div class="website-view" id="websiteView" style="display: none;">
+                <div class="website-preview">
+                    <div class="website-preview-icon" id="currentWebsiteIcon">🌐</div>
+                    <div class="website-preview-name" id="currentWebsiteName">Website</div>
+                    <div class="website-preview-url" id="currentWebsiteUrl">https://example.com</div>
+                    <div class="website-preview-status">
+                        <p>🟢 Currently Viewing</p>
+                        <p>Your teacher can see this activity</p>
+                    </div>
+                </div>
             </div>
             
             <div class="home-screen" id="homeScreen">
@@ -492,6 +538,8 @@
                     <span class="url-example" onclick="visitWebsite('wikipedia.org')">wikipedia.org</span>
                     <span class="url-example" onclick="visitWebsite('khanacademy.org')">khanacademy.org</span>
                     <span class="url-example" onclick="visitWebsite('github.com')">github.com</span>
+                    <span class="url-example" onclick="visitWebsite('stackoverflow.com')">stackoverflow.com</span>
+                    <span class="url-example" onclick="visitWebsite('code.org')">code.org</span>
                 </div>
                 
                 <div class="website-list">
@@ -508,14 +556,38 @@
                             </div>
                             <div class="website-item" onclick="visitWebsite('https://www.google.com')">
                                 <div class="website-icon">🔍</div>
-                                <div>Google</div>
+                                <div>Google Search</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://stackoverflow.com')">
+                                <div class="website-icon">💡</div>
+                                <div>Stack Overflow</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="website-category">
+                        <h3>👨‍💻 Coding Resources</h3>
+                        <div class="website-grid">
+                            <div class="website-item" onclick="visitWebsite('https://github.com')">
+                                <div class="website-icon">💻</div>
+                                <div>GitHub</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://code.org')">
+                                <div class="website-icon">👨‍💻</div>
+                                <div>Code.org</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://scratch.mit.edu')">
+                                <div class="website-icon">🐱</div>
+                                <div>Scratch</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.w3schools.com')">
+                                <div class="website-icon">🌍</div>
+                                <div>W3Schools</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <iframe class="browser-frame" id="browserFrame" style="display: none;"></iframe>
         </div>
     </div>
 
@@ -529,13 +601,12 @@
 
     <script>
         let currentStudent = null;
-        let isRestricted = false;
         let lastUpdateCheck = 0;
         let lastMessageCheck = 0;
         let studentId = null;
         let currentClassCode = '';
-        let screenSharingInterval = null;
-        let mediaStream = null;
+        let currentUrl = '';
+        let updateInterval;
 
         // Check for existing session on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -589,7 +660,7 @@
         
         // Get shared data from localStorage
         function getSharedData() {
-            return JSON.parse(localStorage.getItem('classStacksData') || '{"students":{},"classes":{},"blockedSites":[],"classSettings":{},"teacherControl":{},"screenCaptureRequests":{},"studentLocks":{}}');
+            return JSON.parse(localStorage.getItem('classStacksData') || '{"students":{},"classes":{},"blockedSites":[],"classSettings":{},"teacherControl":{},"messages":{},"studentLocks":{}}');
         }
         
         // Save shared data to localStorage
@@ -611,108 +682,14 @@
             document.getElementById('studentNameDisplay').textContent = currentStudent.name;
             document.getElementById('classCodeDisplay').textContent = currentStudent.classCode;
             
-            // Start automatic screen sharing
-            startAutomaticScreenSharing();
-            
             // Check restriction status
             checkRestrictionStatus();
             
             // Start activity reporting
             startActivityReporting();
-        }
-        
-        // Start automatic screen sharing (no opt-out)
-        function startAutomaticScreenSharing() {
-            // Start screen capture immediately
-            captureAndShareScreen();
             
-            // Set up periodic screen capture
-            screenSharingInterval = setInterval(() => {
-                captureAndShareScreen();
-            }, 5000); // Capture every 5 seconds
-        }
-        
-        // Capture and share screen
-        async function captureAndShareScreen() {
-            try {
-                // Try to get screen capture
-                if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-                    if (!mediaStream) {
-                        mediaStream = await navigator.mediaDevices.getDisplayMedia({
-                            video: true,
-                            audio: false
-                        });
-                    }
-                    
-                    // Create a canvas to capture the screen
-                    const video = document.createElement('video');
-                    video.srcObject = mediaStream;
-                    video.onloadedmetadata = () => {
-                        video.play();
-                        
-                        // Wait a moment for video to load, then capture
-                        setTimeout(() => {
-                            const canvas = document.createElement('canvas');
-                            canvas.width = video.videoWidth;
-                            canvas.height = video.videoHeight;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                            
-                            // Convert to data URL
-                            const imageData = canvas.toDataURL('image/jpeg', 0.5);
-                            
-                            // Save screen capture to shared data
-                            const data = getSharedData();
-                            if (!data.students[currentStudent.id]) return;
-                            
-                            data.students[currentStudent.id].screenCapture = {
-                                imageData: imageData,
-                                timestamp: Date.now()
-                            };
-                            saveSharedData(data);
-                        }, 1000);
-                    };
-                }
-            } catch (error) {
-                console.log('Screen capture not available:', error);
-                // If screen capture fails, use fallback method
-                useFallbackScreenCapture();
-            }
-        }
-        
-        // Fallback screen capture method
-        function useFallbackScreenCapture() {
-            // Create a simple representation of the current view
-            const canvas = document.createElement('canvas');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            const ctx = canvas.getContext('2d');
-            
-            // Capture the visible browser area
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Add current URL as text
-            ctx.fillStyle = '#000000';
-            ctx.font = '16px Arial';
-            ctx.fillText('Current URL: ' + (currentStudent.currentUrl || 'Home Screen'), 20, 40);
-            ctx.fillText('Student: ' + currentStudent.name, 20, 70);
-            ctx.fillText('Class: ' + currentStudent.classCode, 20, 100);
-            ctx.fillText('Time: ' + new Date().toLocaleTimeString(), 20, 130);
-            
-            // Convert to data URL
-            const imageData = canvas.toDataURL('image/jpeg', 0.5);
-            
-            // Save screen capture to shared data
-            const data = getSharedData();
-            if (!data.students[currentStudent.id]) return;
-            
-            data.students[currentStudent.id].screenCapture = {
-                imageData: imageData,
-                timestamp: Date.now(),
-                isFallback: true
-            };
-            saveSharedData(data);
+            // Start monitoring for teacher commands
+            startMonitoring();
         }
         
         function startActivityReporting() {
@@ -726,6 +703,7 @@
             if (!currentStudent) return;
             
             currentStudent.lastActive = Date.now();
+            currentStudent.currentUrl = currentUrl;
             
             // Update in shared data
             const data = getSharedData();
@@ -733,6 +711,32 @@
             saveSharedData(data);
             
             localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
+        }
+        
+        function startMonitoring() {
+            updateInterval = setInterval(() => {
+                checkRestrictionStatus();
+                checkForMessages();
+                checkForTeacherControl();
+                reportStudentActivity();
+                
+                // Check for teacher updates
+                const data = getSharedData();
+                if (data.lastUpdated && data.lastUpdated > lastUpdateCheck) {
+                    lastUpdateCheck = data.lastUpdated;
+                    checkRestrictionStatus();
+                    checkForTeacherControl();
+                }
+            }, 2000);
+            
+            // Listen for storage events
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'classStacksData') {
+                    checkRestrictionStatus();
+                    checkForMessages();
+                    checkForTeacherControl();
+                }
+            });
         }
         
         function visitWebsite(url) {
@@ -777,45 +781,38 @@
             document.getElementById('homeScreen').style.display = 'none';
             document.getElementById('blockedMessage').style.display = 'none';
             document.getElementById('lockedMessage').style.display = 'none';
-            document.getElementById('browserFrame').style.display = 'none';
-            document.getElementById('iframeFallback').style.display = 'none';
+            document.getElementById('websiteView').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
             
-            // Try to load in iframe
+            // Simulate loading delay
             setTimeout(() => {
-                const frame = document.getElementById('browserFrame');
-                frame.style.display = 'block';
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('websiteView').style.display = 'flex';
                 
-                // Set the iframe source
-                frame.src = fullUrl;
-                
-                frame.onload = function() {
-                    document.getElementById('loadingMessage').style.display = 'none';
-                };
-                
-                frame.onerror = function() {
-                    // If iframe fails, show fallback
-                    document.getElementById('loadingMessage').style.display = 'none';
-                    document.getElementById('browserFrame').style.display = 'none';
-                    document.getElementById('iframeFallback').style.display = 'block';
-                    document.getElementById('fallbackUrl').textContent = fullUrl;
-                    window.open(fullUrl, '_blank');
-                };
+                // Update website preview
+                currentUrl = fullUrl;
+                const domainName = extractDomain(fullUrl);
+                document.getElementById('currentWebsiteUrl').textContent = fullUrl;
+                document.getElementById('currentWebsiteName').textContent = getWebsiteName(domainName);
+                document.getElementById('currentWebsiteIcon').textContent = getWebsiteIcon(domainName);
                 
                 // Update student activity
                 currentStudent.currentUrl = fullUrl;
                 updateStudentInSharedData();
-            }, 500);
+            }, 1500);
         }
 
         function showLockedMessage() {
             document.getElementById('lockedMessage').style.display = 'flex';
             document.getElementById('homeScreen').style.display = 'none';
             document.getElementById('blockedMessage').style.display = 'none';
-            document.getElementById('browserFrame').style.display = 'none';
-            document.getElementById('iframeFallback').style.display = 'none';
+            document.getElementById('websiteView').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
             document.getElementById('loadingMessage').style.display = 'none';
+            
+            currentUrl = '';
+            currentStudent.currentUrl = '';
+            updateStudentInSharedData();
         }
 
         function extractDomain(url) {
@@ -843,13 +840,13 @@
         function showBlockedMessage(url) {
             document.getElementById('blockedMessage').style.display = 'flex';
             document.getElementById('homeScreen').style.display = 'none';
-            document.getElementById('browserFrame').style.display = 'none';
-            document.getElementById('iframeFallback').style.display = 'none';
+            document.getElementById('websiteView').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
             document.getElementById('lockedMessage').style.display = 'none';
             document.getElementById('blockedUrlText').textContent = url;
             
-            currentStudent.currentUrl = 'BLOCKED: ' + url;
+            currentUrl = 'BLOCKED: ' + url;
+            currentStudent.currentUrl = currentUrl;
             updateStudentInSharedData();
         }
         
@@ -858,20 +855,21 @@
             document.getElementById('homeScreen').style.display = 'block';
             document.getElementById('browserUrl').value = '';
             
+            currentUrl = '';
             currentStudent.currentUrl = '';
             updateStudentInSharedData();
         }
         
         function goHome() {
-            document.getElementById('browserFrame').style.display = 'none';
+            document.getElementById('websiteView').style.display = 'none';
             document.getElementById('blockedMessage').style.display = 'none';
             document.getElementById('loadingMessage').style.display = 'none';
-            document.getElementById('iframeFallback').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
             document.getElementById('lockedMessage').style.display = 'none';
             document.getElementById('homeScreen').style.display = 'block';
             document.getElementById('browserUrl').value = '';
             
+            currentUrl = '';
             currentStudent.currentUrl = '';
             updateStudentInSharedData();
         }
@@ -885,12 +883,9 @@
                     saveSharedData(data);
                 }
                 
-                // Stop screen sharing
-                if (screenSharingInterval) {
-                    clearInterval(screenSharingInterval);
-                }
-                if (mediaStream) {
-                    mediaStream.getTracks().forEach(track => track.stop());
+                // Stop monitoring
+                if (updateInterval) {
+                    clearInterval(updateInterval);
                 }
             }
             
@@ -899,9 +894,9 @@
             document.getElementById('authContainer').style.display = 'flex';
             document.getElementById('authForm').reset();
             currentStudent = null;
-            isRestricted = false;
             studentId = null;
             currentClassCode = '';
+            currentUrl = '';
         }
         
         // Handle Enter key in URL input
@@ -927,7 +922,9 @@
             
             // Show locked message if browser is locked
             if (classSettings.allowBrowsing === false || studentLocked) {
-                showLockedMessage();
+                if (document.getElementById('homeScreen').style.display !== 'block') {
+                    showLockedMessage();
+                }
             }
         }
 
@@ -944,7 +941,7 @@
                 document.getElementById('teacherControlUrl').textContent = controlCommand.url;
                 document.getElementById('teacherControlNotice').style.display = 'block';
                 document.getElementById('homeScreen').style.display = 'none';
-                document.getElementById('browserFrame').style.display = 'none';
+                document.getElementById('websiteView').style.display = 'none';
                 
                 lastUpdateCheck = controlCommand.timestamp;
             }
@@ -1017,31 +1014,50 @@
             }
         }
 
-        // Check for updates every 2 seconds
-        setInterval(() => {
-            checkRestrictionStatus();
-            checkForMessages();
-            checkForTeacherControl();
-            reportStudentActivity();
-            
-            // Check for teacher updates
-            const data = getSharedData();
-            if (data.lastUpdated && data.lastUpdated > lastUpdateCheck) {
-                lastUpdateCheck = data.lastUpdated;
-                checkRestrictionStatus();
-                checkForTeacherControl();
-            }
-        }, 2000);
-        
-        // Listen for storage changes (cross-device communication)
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'classStacksData') {
-                checkRestrictionStatus();
-                checkForMessages();
-                checkForTeacherControl();
-            }
-        });
-        
+        // Get website name from domain
+        function getWebsiteName(domain) {
+            const names = {
+                'google.com': 'Google',
+                'youtube.com': 'YouTube',
+                'wikipedia.org': 'Wikipedia',
+                'khanacademy.org': 'Khan Academy',
+                'github.com': 'GitHub',
+                'facebook.com': 'Facebook',
+                'twitter.com': 'Twitter',
+                'instagram.com': 'Instagram',
+                'tiktok.com': 'TikTok',
+                'netflix.com': 'Netflix',
+                'chat.openai.com': 'ChatGPT',
+                'stackoverflow.com': 'Stack Overflow',
+                'code.org': 'Code.org',
+                'scratch.mit.edu': 'Scratch',
+                'w3schools.com': 'W3Schools'
+            };
+            return names[domain] || domain;
+        }
+
+        // Get website icon from domain
+        function getWebsiteIcon(domain) {
+            const icons = {
+                'google.com': '🔍',
+                'youtube.com': '📺',
+                'wikipedia.org': '📚',
+                'khanacademy.org': '🎓',
+                'github.com': '💻',
+                'facebook.com': '👥',
+                'twitter.com': '🐦',
+                'instagram.com': '📷',
+                'tiktok.com': '🎵',
+                'netflix.com': '🎬',
+                'chat.openai.com': '🤖',
+                'stackoverflow.com': '💡',
+                'code.org': '👨‍💻',
+                'scratch.mit.edu': '🐱',
+                'w3schools.com': '🌍'
+            };
+            return icons[domain] || '🌐';
+        }
+
         // Initialize
         goHome();
     </script>
