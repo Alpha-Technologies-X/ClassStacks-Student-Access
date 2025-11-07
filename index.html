@@ -336,6 +336,15 @@
             margin: 20px 0;
             text-align: center;
         }
+        
+        .proxy-notice {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -432,6 +441,10 @@
                 <div id="restrictionNotice" class="restriction-notice" style="display: none;">
                     <h4>🔒 Restricted Mode Active</h4>
                     <p>Your teacher has enabled website restrictions. Some sites may be blocked for educational purposes.</p>
+                </div>
+                
+                <div class="proxy-notice">
+                    <strong>💡 Tip:</strong> If a website doesn't load properly, it will automatically open in a new tab.
                 </div>
                 
                 <div class="url-examples">
@@ -621,29 +634,32 @@
             document.getElementById('iframeFallback').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
             
-            // Try to load in iframe
+            // Try to load in iframe with CORS proxy
             setTimeout(() => {
                 const frame = document.getElementById('browserFrame');
                 frame.style.display = 'block';
                 
-                // Set the iframe source
-                frame.src = fullUrl;
+                // Use CORS proxy to bypass iframe restrictions
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(fullUrl)}`;
+                frame.src = proxyUrl;
                 
                 frame.onload = function() {
                     document.getElementById('loadingMessage').style.display = 'none';
                 };
                 
                 frame.onerror = function() {
-                    // If iframe fails, show fallback
+                    // If iframe fails, show fallback and open in new tab
                     document.getElementById('loadingMessage').style.display = 'none';
                     document.getElementById('browserFrame').style.display = 'none';
                     document.getElementById('iframeFallback').style.display = 'block';
                     document.getElementById('fallbackUrl').textContent = fullUrl;
+                    
+                    // Automatically open in new tab
                     window.open(fullUrl, '_blank');
                 };
                 
                 // Update student activity
-                currentStudent.currentUrl = domain;
+                currentStudent.currentUrl = fullUrl;
                 updateStudentInSharedData();
             }, 500);
         }
@@ -663,7 +679,13 @@
             
             const data = getSharedData();
             const blockedSites = data.blockedSites || [];
-            return blockedSites.some(site => domain.toLowerCase().includes(site.toLowerCase()));
+            
+            // Check if domain contains any blocked site
+            return blockedSites.some(site => {
+                // Check for exact domain match or partial match
+                return domain.toLowerCase().includes(site.toLowerCase()) || 
+                       site.toLowerCase().includes(domain.toLowerCase());
+            });
         }
         
         function showBlockedMessage(url) {
