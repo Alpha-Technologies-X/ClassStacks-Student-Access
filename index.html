@@ -251,12 +251,6 @@
             margin-bottom: 20px;
         }
         
-        .browser-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
         .home-screen {
             padding: 40px;
             text-align: center;
@@ -274,12 +268,6 @@
             text-align: center;
             font-size: 1.2rem;
             color: #666;
-        }
-
-        .iframe-fallback {
-            display: none;
-            padding: 40px;
-            text-align: center;
         }
 
         .message-notification {
@@ -415,6 +403,33 @@
             color: #666;
             font-size: 0.9rem;
             margin-top: 20px;
+        }
+
+        .screenshot-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1002;
+        }
+
+        .screenshot-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .screenshot-canvas {
+            max-width: 100%;
+            border: 2px solid #ddd;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -599,6 +614,19 @@
         <button class="btn" onclick="closeMessage()" style="margin-top: 10px; padding: 8px 15px;">OK</button>
     </div>
 
+    <!-- Screenshot Overlay -->
+    <div class="screenshot-overlay" id="screenshotOverlay">
+        <div class="screenshot-container">
+            <h3>📸 Screenshot Requested</h3>
+            <p>Your teacher is requesting a screenshot of your screen.</p>
+            <canvas id="screenshotCanvas" class="screenshot-canvas"></canvas>
+            <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+                <button class="btn btn-success" onclick="takeScreenshot()">Take Screenshot</button>
+                <button class="btn btn-danger" onclick="cancelScreenshot()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentStudent = null;
         let lastUpdateCheck = 0;
@@ -655,12 +683,21 @@
         function registerStudent() {
             const data = getSharedData();
             data.students[currentStudent.id] = currentStudent;
+            
+            // Log the connection
+            if (!data.activityLogs) data.activityLogs = {};
+            if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
+            data.activityLogs[studentId].push({
+                action: 'Student connected to class',
+                timestamp: Date.now()
+            });
+            
             saveSharedData(data);
         }
         
         // Get shared data from localStorage
         function getSharedData() {
-            return JSON.parse(localStorage.getItem('classStacksData') || '{"students":{},"classes":{},"blockedSites":[],"classSettings":{},"teacherControl":{},"messages":{},"studentLocks":{}}');
+            return JSON.parse(localStorage.getItem('classStacksData') || '{"students":{},"classes":{},"blockedSites":[],"classSettings":{},"teacherControl":{},"messages":{},"studentLocks":{},"screenshots":{},"activityLogs":{}}');
         }
         
         // Save shared data to localStorage
@@ -718,6 +755,7 @@
                 checkRestrictionStatus();
                 checkForMessages();
                 checkForTeacherControl();
+                checkForScreenshotRequests();
                 reportStudentActivity();
                 
                 // Check for teacher updates
@@ -726,6 +764,7 @@
                     lastUpdateCheck = data.lastUpdated;
                     checkRestrictionStatus();
                     checkForTeacherControl();
+                    checkForScreenshotRequests();
                 }
             }, 2000);
             
@@ -735,6 +774,7 @@
                     checkRestrictionStatus();
                     checkForMessages();
                     checkForTeacherControl();
+                    checkForScreenshotRequests();
                 }
             });
         }
@@ -783,6 +823,16 @@
             document.getElementById('lockedMessage').style.display = 'none';
             document.getElementById('websiteView').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
+            
+            // Log the website visit
+            const sharedData = getSharedData();
+            if (!sharedData.activityLogs) sharedData.activityLogs = {};
+            if (!sharedData.activityLogs[studentId]) sharedData.activityLogs[studentId] = [];
+            sharedData.activityLogs[studentId].push({
+                action: `Visited ${getWebsiteName(domain)} (${fullUrl})`,
+                timestamp: Date.now()
+            });
+            saveSharedData(sharedData);
             
             // Simulate loading delay
             setTimeout(() => {
@@ -880,6 +930,15 @@
                 const data = getSharedData();
                 if (data.students[currentStudent.id]) {
                     data.students[currentStudent.id].active = false;
+                    
+                    // Log the disconnection
+                    if (!data.activityLogs) data.activityLogs = {};
+                    if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
+                    data.activityLogs[studentId].push({
+                        action: 'Student disconnected',
+                        timestamp: Date.now()
+                    });
+                    
                     saveSharedData(data);
                 }
                 
@@ -937,13 +996,33 @@
             const controlCommand = teacherControl[studentId];
             
             if (controlCommand && controlCommand.timestamp > lastUpdateCheck) {
-                // Show teacher control notice
-                document.getElementById('teacherControlUrl').textContent = controlCommand.url;
-                document.getElementById('teacherControlNotice').style.display = 'block';
-                document.getElementById('homeScreen').style.display = 'none';
-                document.getElementById('websiteView').style.display = 'none';
-                
-                lastUpdateCheck = controlCommand.timestamp;
+                if (controlCommand.action === 'closeTab') {
+                    // Close current tab and go home
+                    goHome();
+                    alert('Your teacher closed your current tab');
+                    
+                    // Log the action
+                    if (!data.activityLogs) data.activityLogs = {};
+                    if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
+                    data.activityLogs[studentId].push({
+                        action: 'Teacher closed tab',
+                        timestamp: Date.now()
+                    });
+                    saveSharedData(data);
+                    
+                    // Clear the control command
+                    delete teacherControl[studentId];
+                    data.teacherControl = teacherControl;
+                    saveSharedData(data);
+                } else if (controlCommand.url) {
+                    // Show teacher control notice
+                    document.getElementById('teacherControlUrl').textContent = controlCommand.url;
+                    document.getElementById('teacherControlNotice').style.display = 'block';
+                    document.getElementById('homeScreen').style.display = 'none';
+                    document.getElementById('websiteView').style.display = 'none';
+                    
+                    lastUpdateCheck = controlCommand.timestamp;
+                }
             }
         }
 
@@ -957,12 +1036,114 @@
                 document.getElementById('browserUrl').value = controlCommand.url;
                 navigateToUrl();
                 
+                // Log the teacher navigation
+                if (!data.activityLogs) data.activityLogs = {};
+                if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
+                data.activityLogs[studentId].push({
+                    action: `Teacher navigated to ${controlCommand.url}`,
+                    timestamp: Date.now()
+                });
+                
                 // Clear the control command
                 delete teacherControl[studentId];
                 data.teacherControl = teacherControl;
                 saveSharedData(data);
                 
                 document.getElementById('teacherControlNotice').style.display = 'none';
+            }
+        }
+
+        // Check for screenshot requests
+        function checkForScreenshotRequests() {
+            if (!studentId) return;
+
+            const data = getSharedData();
+            const screenshots = data.screenshots || {};
+            const screenshotRequest = screenshots[studentId];
+            
+            if (screenshotRequest && screenshotRequest.requested && screenshotRequest.timestamp > lastUpdateCheck) {
+                // Show screenshot overlay
+                document.getElementById('screenshotOverlay').style.display = 'flex';
+                lastUpdateCheck = screenshotRequest.timestamp;
+            }
+        }
+
+        // Take screenshot
+        function takeScreenshot() {
+            const canvas = document.getElementById('screenshotCanvas');
+            const context = canvas.getContext('2d');
+            
+            // Set canvas size to match browser content
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight - 160; // Account for header and controls
+            
+            // Draw the current browser content
+            context.fillStyle = '#ffffff';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw current URL and student info
+            context.fillStyle = '#000000';
+            context.font = '16px Arial';
+            context.fillText(`Student: ${currentStudent.name}`, 20, 30);
+            context.fillText(`Class: ${currentStudent.classCode}`, 20, 60);
+            context.fillText(`Current URL: ${currentUrl || 'Home Screen'}`, 20, 90);
+            context.fillText(`Time: ${new Date().toLocaleString()}`, 20, 120);
+            
+            // Draw a representation of the current view
+            if (currentUrl) {
+                const domain = extractDomain(currentUrl);
+                context.font = 'bold 24px Arial';
+                context.fillText(getWebsiteName(domain), 20, 170);
+                context.font = '16px Arial';
+                context.fillText(currentUrl, 20, 200);
+                
+                // Draw website content representation
+                context.fillStyle = '#f0f0f0';
+                context.fillRect(20, 220, canvas.width - 40, 200);
+                context.fillStyle = '#666';
+                context.fillText('Website content would appear here in a real implementation', 40, 250);
+            } else {
+                context.font = 'bold 24px Arial';
+                context.fillText('Class Stacks Home Screen', 20, 170);
+                context.font = '16px Arial';
+                context.fillText('Educational Browser - Teacher Monitored', 20, 200);
+            }
+            
+            // Convert to data URL and save
+            const imageData = canvas.toDataURL('image/png');
+            
+            const data = getSharedData();
+            if (!data.screenshots) data.screenshots = {};
+            data.screenshots[studentId] = {
+                imageData: imageData,
+                timestamp: Date.now(),
+                requested: false
+            };
+            
+            // Log the screenshot
+            if (!data.activityLogs) data.activityLogs = {};
+            if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
+            data.activityLogs[studentId].push({
+                action: 'Screenshot taken by teacher',
+                timestamp: Date.now()
+            });
+            
+            saveSharedData(data);
+            
+            // Hide overlay
+            document.getElementById('screenshotOverlay').style.display = 'none';
+            
+            alert('Screenshot sent to teacher');
+        }
+
+        function cancelScreenshot() {
+            document.getElementById('screenshotOverlay').style.display = 'none';
+            
+            // Mark request as cancelled
+            const data = getSharedData();
+            if (data.screenshots && data.screenshots[studentId]) {
+                data.screenshots[studentId].requested = false;
+                saveSharedData(data);
             }
         }
 
