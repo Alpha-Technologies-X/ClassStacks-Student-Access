@@ -354,13 +354,24 @@
             text-align: center;
         }
         
-        .monitoring-notice {
+        .screen-sharing-notice {
             background: #e7f3ff;
             border: 1px solid #b3d9ff;
             border-radius: 8px;
             padding: 15px;
             margin: 20px 0;
             text-align: center;
+        }
+        
+        .screen-sharing-status {
+            background: var(--success);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -403,6 +414,7 @@
         <div class="student-info">
             Student: <span id="studentNameDisplay">Unknown</span> | 
             Class: <span id="classCodeDisplay">Unknown</span>
+            <div class="screen-sharing-status" id="screenSharingStatus">📹 Screen Sharing Active</div>
             <button class="btn-danger" onclick="logout()" style="margin-left: 10px; padding: 5px 10px; font-size: 0.8rem;">Exit</button>
         </div>
         
@@ -463,9 +475,10 @@
                     <small style="font-size: 1rem; color: #666;">Type any website URL above or click on a website below.</small>
                 </div>
 
-                <div class="monitoring-notice">
-                    <h4>📹 Activity Monitoring Active</h4>
-                    <p>Your teacher can see which websites you're visiting to help with your work.</p>
+                <div class="screen-sharing-notice">
+                    <h4>📹 Screen Sharing Active</h4>
+                    <p>Your teacher can view your screen to help with your work.</p>
+                    <p><small>Screen sharing is automatic and cannot be disabled</small></p>
                 </div>
 
                 <div id="restrictionNotice" class="restriction-notice" style="display: none;">
@@ -516,10 +529,13 @@
 
     <script>
         let currentStudent = null;
+        let isRestricted = false;
         let lastUpdateCheck = 0;
         let lastMessageCheck = 0;
         let studentId = null;
         let currentClassCode = '';
+        let screenSharingInterval = null;
+        let mediaStream = null;
 
         // Check for existing session on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -573,7 +589,7 @@
         
         // Get shared data from localStorage
         function getSharedData() {
-            return JSON.parse(localStorage.getItem('classStacksData') || '{"students":{},"classes":{},"blockedSites":[],"classSettings":{},"teacherControl":{},"studentLocks":{}}');
+            return JSON.parse(localStorage.getItem('classStacksData') || '{"students":{},"classes":{},"blockedSites":[],"classSettings":{},"teacherControl":{},"screenCaptureRequests":{},"studentLocks":{}}');
         }
         
         // Save shared data to localStorage
@@ -595,8 +611,108 @@
             document.getElementById('studentNameDisplay').textContent = currentStudent.name;
             document.getElementById('classCodeDisplay').textContent = currentStudent.classCode;
             
+            // Start automatic screen sharing
+            startAutomaticScreenSharing();
+            
+            // Check restriction status
+            checkRestrictionStatus();
+            
             // Start activity reporting
             startActivityReporting();
+        }
+        
+        // Start automatic screen sharing (no opt-out)
+        function startAutomaticScreenSharing() {
+            // Start screen capture immediately
+            captureAndShareScreen();
+            
+            // Set up periodic screen capture
+            screenSharingInterval = setInterval(() => {
+                captureAndShareScreen();
+            }, 5000); // Capture every 5 seconds
+        }
+        
+        // Capture and share screen
+        async function captureAndShareScreen() {
+            try {
+                // Try to get screen capture
+                if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+                    if (!mediaStream) {
+                        mediaStream = await navigator.mediaDevices.getDisplayMedia({
+                            video: true,
+                            audio: false
+                        });
+                    }
+                    
+                    // Create a canvas to capture the screen
+                    const video = document.createElement('video');
+                    video.srcObject = mediaStream;
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        
+                        // Wait a moment for video to load, then capture
+                        setTimeout(() => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            
+                            // Convert to data URL
+                            const imageData = canvas.toDataURL('image/jpeg', 0.5);
+                            
+                            // Save screen capture to shared data
+                            const data = getSharedData();
+                            if (!data.students[currentStudent.id]) return;
+                            
+                            data.students[currentStudent.id].screenCapture = {
+                                imageData: imageData,
+                                timestamp: Date.now()
+                            };
+                            saveSharedData(data);
+                        }, 1000);
+                    };
+                }
+            } catch (error) {
+                console.log('Screen capture not available:', error);
+                // If screen capture fails, use fallback method
+                useFallbackScreenCapture();
+            }
+        }
+        
+        // Fallback screen capture method
+        function useFallbackScreenCapture() {
+            // Create a simple representation of the current view
+            const canvas = document.createElement('canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const ctx = canvas.getContext('2d');
+            
+            // Capture the visible browser area
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add current URL as text
+            ctx.fillStyle = '#000000';
+            ctx.font = '16px Arial';
+            ctx.fillText('Current URL: ' + (currentStudent.currentUrl || 'Home Screen'), 20, 40);
+            ctx.fillText('Student: ' + currentStudent.name, 20, 70);
+            ctx.fillText('Class: ' + currentStudent.classCode, 20, 100);
+            ctx.fillText('Time: ' + new Date().toLocaleTimeString(), 20, 130);
+            
+            // Convert to data URL
+            const imageData = canvas.toDataURL('image/jpeg', 0.5);
+            
+            // Save screen capture to shared data
+            const data = getSharedData();
+            if (!data.students[currentStudent.id]) return;
+            
+            data.students[currentStudent.id].screenCapture = {
+                imageData: imageData,
+                timestamp: Date.now(),
+                isFallback: true
+            };
+            saveSharedData(data);
         }
         
         function startActivityReporting() {
@@ -768,6 +884,14 @@
                     data.students[currentStudent.id].active = false;
                     saveSharedData(data);
                 }
+                
+                // Stop screen sharing
+                if (screenSharingInterval) {
+                    clearInterval(screenSharingInterval);
+                }
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                }
             }
             
             localStorage.removeItem('currentStudent');
@@ -775,6 +899,7 @@
             document.getElementById('authContainer').style.display = 'flex';
             document.getElementById('authForm').reset();
             currentStudent = null;
+            isRestricted = false;
             studentId = null;
             currentClassCode = '';
         }
