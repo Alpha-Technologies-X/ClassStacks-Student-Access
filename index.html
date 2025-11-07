@@ -431,6 +431,19 @@
             border: 2px solid #ddd;
             border-radius: 5px;
         }
+
+        .browser-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+
+        .iframe-fallback {
+            display: none;
+            padding: 40px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -472,7 +485,7 @@
         <div class="student-info">
             Student: <span id="studentNameDisplay">Unknown</span> | 
             Class: <span id="classCodeDisplay">Unknown</span>
-            <div class="screen-sharing-status" id="screenSharingStatus">📹 Screen Sharing Active</div>
+            <div class="screen-sharing-status" id="screenSharingStatus">📹 Auto Screenshots Active</div>
             <button class="btn-danger" onclick="logout()" style="margin-left: 10px; padding: 5px 10px; font-size: 0.8rem;">Exit</button>
         </div>
         
@@ -529,6 +542,17 @@
                     </div>
                 </div>
             </div>
+
+            <div class="iframe-fallback" id="iframeFallback">
+                <div style="font-size: 3rem; margin-bottom: 20px;">🌐</div>
+                <h3>Website Loaded in New Tab</h3>
+                <p>This website doesn't allow embedding for security reasons.</p>
+                <p>It has been opened in a new browser tab for you.</p>
+                <p id="fallbackUrl" style="margin: 15px 0; font-family: monospace;"></p>
+                <button class="btn" onclick="goHome()" style="margin-top: 20px;">Return to Browser Home</button>
+            </div>
+            
+            <iframe class="browser-frame" id="browserFrame"></iframe>
             
             <div class="home-screen" id="homeScreen">
                 <div class="welcome-message">
@@ -537,9 +561,9 @@
                 </div>
 
                 <div class="screen-sharing-notice">
-                    <h4>📹 Screen Sharing Active</h4>
-                    <p>Your teacher can view your screen to help with your work.</p>
-                    <p><small>Screen sharing is automatic and cannot be disabled</small></p>
+                    <h4>📹 Auto Screenshots Active</h4>
+                    <p>Your teacher can view screenshots of your screen to help with your work.</p>
+                    <p><small>Screenshots are taken automatically every 2.5 seconds</small></p>
                 </div>
 
                 <div id="restrictionNotice" class="restriction-notice" style="display: none;">
@@ -555,6 +579,8 @@
                     <span class="url-example" onclick="visitWebsite('github.com')">github.com</span>
                     <span class="url-example" onclick="visitWebsite('stackoverflow.com')">stackoverflow.com</span>
                     <span class="url-example" onclick="visitWebsite('code.org')">code.org</span>
+                    <span class="url-example" onclick="visitWebsite('duolingo.com')">duolingo.com</span>
+                    <span class="url-example" onclick="visitWebsite('youtube.com')">youtube.com</span>
                 </div>
                 
                 <div class="website-list">
@@ -601,6 +627,28 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="website-category">
+                        <h3>🎓 Learning Platforms</h3>
+                        <div class="website-grid">
+                            <div class="website-item" onclick="visitWebsite('https://www.duolingo.com')">
+                                <div class="website-icon">🦉</div>
+                                <div>Duolingo</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.coursera.org')">
+                                <div class="website-icon">🎓</div>
+                                <div>Coursera</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.edx.org')">
+                                <div class="website-icon">📖</div>
+                                <div>edX</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.udemy.com')">
+                                <div class="website-icon">🎯</div>
+                                <div>Udemy</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -635,6 +683,7 @@
         let currentClassCode = '';
         let currentUrl = '';
         let updateInterval;
+        let screenshotInterval;
 
         // Check for existing session on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -727,6 +776,9 @@
             
             // Start monitoring for teacher commands
             startMonitoring();
+            
+            // Start automatic screenshots
+            startAutomaticScreenshots();
         }
         
         function startActivityReporting() {
@@ -734,6 +786,13 @@
             setInterval(() => {
                 reportStudentActivity();
             }, 5000);
+        }
+
+        function startAutomaticScreenshots() {
+            // Take screenshots every 2.5 seconds
+            screenshotInterval = setInterval(() => {
+                takeAutomaticScreenshot();
+            }, 2500);
         }
         
         function reportStudentActivity() {
@@ -823,6 +882,8 @@
             document.getElementById('lockedMessage').style.display = 'none';
             document.getElementById('websiteView').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
+            document.getElementById('browserFrame').style.display = 'none';
+            document.getElementById('iframeFallback').style.display = 'none';
             
             // Log the website visit
             const sharedData = getSharedData();
@@ -834,12 +895,29 @@
             });
             saveSharedData(sharedData);
             
-            // Simulate loading delay
-            setTimeout(() => {
+            // Try to load in iframe first
+            const frame = document.getElementById('browserFrame');
+            frame.style.display = 'block';
+            frame.src = fullUrl;
+            
+            frame.onload = function() {
                 document.getElementById('loadingMessage').style.display = 'none';
-                document.getElementById('websiteView').style.display = 'flex';
+                currentUrl = fullUrl;
+                currentStudent.currentUrl = fullUrl;
+                updateStudentInSharedData();
+            };
+            
+            frame.onerror = function() {
+                // If iframe fails, show fallback and open in new tab
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('browserFrame').style.display = 'none';
+                document.getElementById('iframeFallback').style.display = 'block';
+                document.getElementById('fallbackUrl').textContent = fullUrl;
                 
-                // Update website preview
+                // Open website in new tab
+                window.open(fullUrl, '_blank');
+                
+                // Show website preview
                 currentUrl = fullUrl;
                 const domainName = extractDomain(fullUrl);
                 document.getElementById('currentWebsiteUrl').textContent = fullUrl;
@@ -849,7 +927,15 @@
                 // Update student activity
                 currentStudent.currentUrl = fullUrl;
                 updateStudentInSharedData();
-            }, 1500);
+            };
+            
+            // Set timeout for iframe loading
+            setTimeout(() => {
+                if (document.getElementById('loadingMessage').style.display === 'block') {
+                    // If still loading, assume iframe failed
+                    frame.onerror();
+                }
+            }, 3000);
         }
 
         function showLockedMessage() {
@@ -859,6 +945,8 @@
             document.getElementById('websiteView').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
             document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('browserFrame').style.display = 'none';
+            document.getElementById('iframeFallback').style.display = 'none';
             
             currentUrl = '';
             currentStudent.currentUrl = '';
@@ -893,6 +981,9 @@
             document.getElementById('websiteView').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
             document.getElementById('lockedMessage').style.display = 'none';
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('browserFrame').style.display = 'none';
+            document.getElementById('iframeFallback').style.display = 'none';
             document.getElementById('blockedUrlText').textContent = url;
             
             currentUrl = 'BLOCKED: ' + url;
@@ -916,6 +1007,8 @@
             document.getElementById('loadingMessage').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
             document.getElementById('lockedMessage').style.display = 'none';
+            document.getElementById('browserFrame').style.display = 'none';
+            document.getElementById('iframeFallback').style.display = 'none';
             document.getElementById('homeScreen').style.display = 'block';
             document.getElementById('browserUrl').value = '';
             
@@ -942,9 +1035,12 @@
                     saveSharedData(data);
                 }
                 
-                // Stop monitoring
+                // Stop monitoring and screenshots
                 if (updateInterval) {
                     clearInterval(updateInterval);
+                }
+                if (screenshotInterval) {
+                    clearInterval(screenshotInterval);
                 }
             }
             
@@ -1020,6 +1116,7 @@
                     document.getElementById('teacherControlNotice').style.display = 'block';
                     document.getElementById('homeScreen').style.display = 'none';
                     document.getElementById('websiteView').style.display = 'none';
+                    document.getElementById('browserFrame').style.display = 'none';
                     
                     lastUpdateCheck = controlCommand.timestamp;
                 }
@@ -1068,8 +1165,10 @@
             }
         }
 
-        // Take screenshot
-        function takeScreenshot() {
+        // Take automatic screenshot (every 2.5 seconds)
+        function takeAutomaticScreenshot() {
+            if (!studentId || document.getElementById('lockedMessage').style.display === 'flex') return;
+            
             const canvas = document.getElementById('screenshotCanvas');
             const context = canvas.getContext('2d');
             
@@ -1077,37 +1176,184 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight - 160; // Account for header and controls
             
-            // Draw the current browser content
+            // Draw the current browser content representation
             context.fillStyle = '#ffffff';
             context.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Draw current URL and student info
-            context.fillStyle = '#000000';
-            context.font = '16px Arial';
-            context.fillText(`Student: ${currentStudent.name}`, 20, 30);
-            context.fillText(`Class: ${currentStudent.classCode}`, 20, 60);
-            context.fillText(`Current URL: ${currentUrl || 'Home Screen'}`, 20, 90);
-            context.fillText(`Time: ${new Date().toLocaleString()}`, 20, 120);
-            
-            // Draw a representation of the current view
-            if (currentUrl) {
-                const domain = extractDomain(currentUrl);
-                context.font = 'bold 24px Arial';
-                context.fillText(getWebsiteName(domain), 20, 170);
-                context.font = '16px Arial';
-                context.fillText(currentUrl, 20, 200);
-                
-                // Draw website content representation
+            // Draw current view representation
+            if (currentUrl && document.getElementById('browserFrame').style.display === 'block') {
+                // If we're in iframe mode, draw iframe representation
                 context.fillStyle = '#f0f0f0';
-                context.fillRect(20, 220, canvas.width - 40, 200);
-                context.fillStyle = '#666';
-                context.fillText('Website content would appear here in a real implementation', 40, 250);
-            } else {
-                context.font = 'bold 24px Arial';
-                context.fillText('Class Stacks Home Screen', 20, 170);
+                context.fillRect(20, 20, canvas.width - 40, canvas.height - 40);
+                
+                context.fillStyle = '#000000';
+                context.font = 'bold 20px Arial';
+                context.fillText('Website View (Iframe)', 40, 50);
+                
                 context.font = '16px Arial';
-                context.fillText('Educational Browser - Teacher Monitored', 20, 200);
+                context.fillText(`URL: ${currentUrl}`, 40, 80);
+                
+                // Draw browser controls representation
+                context.fillStyle = '#e9ecef';
+                context.fillRect(20, 100, canvas.width - 40, 40);
+                context.fillStyle = '#000000';
+                context.fillText('Browser Navigation Bar', 40, 125);
+            } else if (currentUrl) {
+                // Draw website preview representation
+                const domain = extractDomain(currentUrl);
+                
+                context.fillStyle = getWebsiteColor(domain);
+                context.fillRect(0, 0, canvas.width, 120);
+                
+                context.fillStyle = '#ffffff';
+                context.font = 'bold 24px Arial';
+                context.fillText(getWebsiteName(domain), 40, 50);
+                
+                context.font = '16px Arial';
+                context.fillText(currentUrl, 40, 80);
+                
+                // Draw content area
+                context.fillStyle = '#f8f9fa';
+                context.fillRect(0, 120, canvas.width, canvas.height - 120);
+                
+                context.fillStyle = '#666';
+                context.font = '14px Arial';
+                context.fillText('Website content would appear here', 40, 160);
+                context.fillText('Actual screenshots show real student activity', 40, 185);
+            } else {
+                // Draw home screen representation
+                context.fillStyle = var('--primary');
+                context.fillRect(0, 0, canvas.width, 120);
+                
+                context.fillStyle = '#ffffff';
+                context.font = 'bold 24px Arial';
+                context.fillText('Class Stacks Browser', 40, 50);
+                
+                context.font = '16px Arial';
+                context.fillText('Educational Browser - Teacher Monitored', 40, 80);
+                
+                // Draw quick access icons
+                const websites = ['Google', 'Wikipedia', 'Khan Academy', 'GitHub'];
+                for (let i = 0; i < websites.length; i++) {
+                    const x = 40 + (i * 120);
+                    const y = 150;
+                    
+                    context.fillStyle = '#e9ecef';
+                    context.fillRect(x, y, 80, 80);
+                    
+                    context.fillStyle = '#000000';
+                    context.font = '12px Arial';
+                    context.fillText(websites[i], x, y + 100);
+                }
             }
+            
+            // Draw student info overlay
+            context.fillStyle = 'rgba(0,0,0,0.7)';
+            context.fillRect(canvas.width - 300, canvas.height - 60, 300, 60);
+            
+            context.fillStyle = '#ffffff';
+            context.font = '12px Arial';
+            context.fillText(`Student: ${currentStudent.name}`, canvas.width - 280, canvas.height - 40);
+            context.fillText(`Class: ${currentStudent.classCode}`, canvas.width - 280, canvas.height - 20);
+            context.fillText(`Time: ${new Date().toLocaleTimeString()}`, canvas.width - 140, canvas.height - 20);
+            
+            // Convert to data URL and save
+            const imageData = canvas.toDataURL('image/png');
+            
+            const data = getSharedData();
+            if (!data.screenshots) data.screenshots = {};
+            data.screenshots[studentId] = {
+                imageData: imageData,
+                timestamp: Date.now(),
+                requested: false
+            };
+            
+            saveSharedData(data);
+        }
+
+        // Take manual screenshot (when requested by teacher)
+        function takeScreenshot() {
+            const canvas = document.getElementById('screenshotCanvas');
+            const context = canvas.getContext('2d');
+            
+            // Set canvas size to match browser content
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight - 160;
+            
+            // Draw the current browser content representation
+            context.fillStyle = '#ffffff';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw current view representation (same as automatic but with "REQUESTED" label)
+            if (currentUrl && document.getElementById('browserFrame').style.display === 'block') {
+                context.fillStyle = '#f0f0f0';
+                context.fillRect(20, 20, canvas.width - 40, canvas.height - 40);
+                
+                context.fillStyle = '#000000';
+                context.font = 'bold 20px Arial';
+                context.fillText('Website View (Iframe) - REQUESTED', 40, 50);
+                
+                context.font = '16px Arial';
+                context.fillText(`URL: ${currentUrl}`, 40, 80);
+                
+                context.fillStyle = '#e9ecef';
+                context.fillRect(20, 100, canvas.width - 40, 40);
+                context.fillStyle = '#000000';
+                context.fillText('Browser Navigation Bar', 40, 125);
+            } else if (currentUrl) {
+                const domain = extractDomain(currentUrl);
+                
+                context.fillStyle = getWebsiteColor(domain);
+                context.fillRect(0, 0, canvas.width, 120);
+                
+                context.fillStyle = '#ffffff';
+                context.font = 'bold 24px Arial';
+                context.fillText(getWebsiteName(domain) + ' - REQUESTED', 40, 50);
+                
+                context.font = '16px Arial';
+                context.fillText(currentUrl, 40, 80);
+                
+                context.fillStyle = '#f8f9fa';
+                context.fillRect(0, 120, canvas.width, canvas.height - 120);
+                
+                context.fillStyle = '#666';
+                context.font = '14px Arial';
+                context.fillText('Website content would appear here', 40, 160);
+                context.fillText('Teacher-requested screenshot', 40, 185);
+            } else {
+                context.fillStyle = var('--primary');
+                context.fillRect(0, 0, canvas.width, 120);
+                
+                context.fillStyle = '#ffffff';
+                context.font = 'bold 24px Arial';
+                context.fillText('Class Stacks Browser - REQUESTED', 40, 50);
+                
+                context.font = '16px Arial';
+                context.fillText('Educational Browser - Teacher Monitored', 40, 80);
+                
+                const websites = ['Google', 'Wikipedia', 'Khan Academy', 'GitHub'];
+                for (let i = 0; i < websites.length; i++) {
+                    const x = 40 + (i * 120);
+                    const y = 150;
+                    
+                    context.fillStyle = '#e9ecef';
+                    context.fillRect(x, y, 80, 80);
+                    
+                    context.fillStyle = '#000000';
+                    context.font = '12px Arial';
+                    context.fillText(websites[i], x, y + 100);
+                }
+            }
+            
+            // Draw student info overlay
+            context.fillStyle = 'rgba(0,0,0,0.7)';
+            context.fillRect(canvas.width - 300, canvas.height - 60, 300, 60);
+            
+            context.fillStyle = '#ffffff';
+            context.font = '12px Arial';
+            context.fillText(`Student: ${currentStudent.name}`, canvas.width - 280, canvas.height - 40);
+            context.fillText(`Class: ${currentStudent.classCode}`, canvas.width - 280, canvas.height - 20);
+            context.fillText(`Time: ${new Date().toLocaleTimeString()}`, canvas.width - 140, canvas.height - 20);
             
             // Convert to data URL and save
             const imageData = canvas.toDataURL('image/png');
@@ -1124,7 +1370,7 @@
             if (!data.activityLogs) data.activityLogs = {};
             if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
             data.activityLogs[studentId].push({
-                action: 'Screenshot taken by teacher',
+                action: 'Screenshot taken by teacher request',
                 timestamp: Date.now()
             });
             
@@ -1145,6 +1391,22 @@
                 data.screenshots[studentId].requested = false;
                 saveSharedData(data);
             }
+        }
+
+        // Get website color for screenshot representation
+        function getWebsiteColor(domain) {
+            const colors = {
+                'google.com': '#4285f4',
+                'youtube.com': '#ff0000',
+                'wikipedia.org': '#000000',
+                'khanacademy.org': '#14bf96',
+                'github.com': '#24292e',
+                'duolingo.com': '#58cc02',
+                'stackoverflow.com': '#f48024',
+                'code.org': '#0fbd8c',
+                'w3schools.com': '#04aa6d'
+            };
+            return colors[domain] || '#4361ee';
         }
 
         // Check for new messages from teacher
@@ -1212,7 +1474,11 @@
                 'stackoverflow.com': 'Stack Overflow',
                 'code.org': 'Code.org',
                 'scratch.mit.edu': 'Scratch',
-                'w3schools.com': 'W3Schools'
+                'w3schools.com': 'W3Schools',
+                'duolingo.com': 'Duolingo',
+                'coursera.org': 'Coursera',
+                'edx.org': 'edX',
+                'udemy.com': 'Udemy'
             };
             return names[domain] || domain;
         }
@@ -1234,7 +1500,11 @@
                 'stackoverflow.com': '💡',
                 'code.org': '👨‍💻',
                 'scratch.mit.edu': '🐱',
-                'w3schools.com': '🌍'
+                'w3schools.com': '🌍',
+                'duolingo.com': '🦉',
+                'coursera.org': '🎓',
+                'edx.org': '📖',
+                'udemy.com': '🎯'
             };
             return icons[domain] || '🌐';
         }
