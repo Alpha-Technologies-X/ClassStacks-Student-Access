@@ -234,6 +234,23 @@
             margin-bottom: 20px;
         }
         
+        .locked-message {
+            display: none;
+            background: #e9ecef;
+            color: #6c757d;
+            padding: 40px;
+            text-align: center;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .locked-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
         .browser-frame {
             width: 100%;
             height: 100%;
@@ -337,13 +354,24 @@
             text-align: center;
         }
         
-        .proxy-notice {
+        .screen-sharing-notice {
             background: #e7f3ff;
             border: 1px solid #b3d9ff;
             border-radius: 8px;
-            padding: 10px;
-            margin: 10px 0;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .screen-sharing-status {
+            background: var(--success);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
             font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -386,6 +414,7 @@
         <div class="student-info">
             Student: <span id="studentNameDisplay">Unknown</span> | 
             Class: <span id="classCodeDisplay">Unknown</span>
+            <div class="screen-sharing-status" id="screenSharingStatus">📹 Screen Sharing Active</div>
             <button class="btn-danger" onclick="logout()" style="margin-left: 10px; padding: 5px 10px; font-size: 0.8rem;">Exit</button>
         </div>
         
@@ -403,6 +432,14 @@
         </div>
         
         <div class="browser-content" id="browserContent">
+            <div class="locked-message" id="lockedMessage">
+                <div class="locked-icon">🔒</div>
+                <h2>Browser Locked</h2>
+                <p>Your teacher has locked your browser.</p>
+                <p>You cannot access any websites at this time.</p>
+                <button class="btn" onclick="goHome()" style="margin-top: 20px;">Return to Home</button>
+            </div>
+            
             <div class="teacher-control-notice" id="teacherControlNotice" style="display: none;">
                 <h4>🎮 Teacher Navigation</h4>
                 <p>Your teacher is navigating your browser to: <strong id="teacherControlUrl"></strong></p>
@@ -438,19 +475,20 @@
                     <small style="font-size: 1rem; color: #666;">Type any website URL above or click on a website below.</small>
                 </div>
 
+                <div class="screen-sharing-notice">
+                    <h4>📹 Screen Sharing Active</h4>
+                    <p>Your teacher can view your screen to help with your work.</p>
+                    <p><small>Screen sharing is automatic and cannot be disabled</small></p>
+                </div>
+
                 <div id="restrictionNotice" class="restriction-notice" style="display: none;">
                     <h4>🔒 Restricted Mode Active</h4>
                     <p>Your teacher has enabled website restrictions. Some sites may be blocked for educational purposes.</p>
                 </div>
                 
-                <div class="proxy-notice">
-                    <strong>💡 Tip:</strong> If a website doesn't load properly, it will automatically open in a new tab.
-                </div>
-                
                 <div class="url-examples">
                     <h4>💡 Try these URLs:</h4>
                     <span class="url-example" onclick="visitWebsite('google.com')">google.com</span>
-                    <span class="url-example" onclick="visitWebsite('youtube.com')">youtube.com</span>
                     <span class="url-example" onclick="visitWebsite('wikipedia.org')">wikipedia.org</span>
                     <span class="url-example" onclick="visitWebsite('khanacademy.org')">khanacademy.org</span>
                     <span class="url-example" onclick="visitWebsite('github.com')">github.com</span>
@@ -458,19 +496,19 @@
                 
                 <div class="website-list">
                     <div class="website-category">
-                        <h3>🌐 Popular Websites</h3>
+                        <h3>🌐 Educational Websites</h3>
                         <div class="website-grid">
+                            <div class="website-item" onclick="visitWebsite('https://www.khanacademy.org')">
+                                <div class="website-icon">📚</div>
+                                <div>Khan Academy</div>
+                            </div>
+                            <div class="website-item" onclick="visitWebsite('https://www.wikipedia.org')">
+                                <div class="website-icon">🌐</div>
+                                <div>Wikipedia</div>
+                            </div>
                             <div class="website-item" onclick="visitWebsite('https://www.google.com')">
                                 <div class="website-icon">🔍</div>
                                 <div>Google</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.youtube.com')">
-                                <div class="website-icon">📺</div>
-                                <div>YouTube</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.wikipedia.org')">
-                                <div class="website-icon">📚</div>
-                                <div>Wikipedia</div>
                             </div>
                         </div>
                     </div>
@@ -496,7 +534,9 @@
         let lastMessageCheck = 0;
         let studentId = null;
         let currentClassCode = '';
-        
+        let screenSharingInterval = null;
+        let mediaStream = null;
+
         // Check for existing session on page load
         document.addEventListener('DOMContentLoaded', function() {
             const savedStudent = localStorage.getItem('currentStudent');
@@ -549,7 +589,7 @@
         
         // Get shared data from localStorage
         function getSharedData() {
-            return JSON.parse(localStorage.getItem('classStacksData') || '{"students":{},"blockedSites":[],"restrictedStudents":{},"teacherControl":{}}');
+            return JSON.parse(localStorage.getItem('classStacksData') || '{"students":{},"classes":{},"blockedSites":[],"classSettings":{},"teacherControl":{},"screenCaptureRequests":{},"studentLocks":{}}');
         }
         
         // Save shared data to localStorage
@@ -571,11 +611,108 @@
             document.getElementById('studentNameDisplay').textContent = currentStudent.name;
             document.getElementById('classCodeDisplay').textContent = currentStudent.classCode;
             
+            // Start automatic screen sharing
+            startAutomaticScreenSharing();
+            
             // Check restriction status
             checkRestrictionStatus();
             
             // Start activity reporting
             startActivityReporting();
+        }
+        
+        // Start automatic screen sharing (no opt-out)
+        function startAutomaticScreenSharing() {
+            // Start screen capture immediately
+            captureAndShareScreen();
+            
+            // Set up periodic screen capture
+            screenSharingInterval = setInterval(() => {
+                captureAndShareScreen();
+            }, 5000); // Capture every 5 seconds
+        }
+        
+        // Capture and share screen
+        async function captureAndShareScreen() {
+            try {
+                // Try to get screen capture
+                if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+                    if (!mediaStream) {
+                        mediaStream = await navigator.mediaDevices.getDisplayMedia({
+                            video: true,
+                            audio: false
+                        });
+                    }
+                    
+                    // Create a canvas to capture the screen
+                    const video = document.createElement('video');
+                    video.srcObject = mediaStream;
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        
+                        // Wait a moment for video to load, then capture
+                        setTimeout(() => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            
+                            // Convert to data URL
+                            const imageData = canvas.toDataURL('image/jpeg', 0.5);
+                            
+                            // Save screen capture to shared data
+                            const data = getSharedData();
+                            if (!data.students[currentStudent.id]) return;
+                            
+                            data.students[currentStudent.id].screenCapture = {
+                                imageData: imageData,
+                                timestamp: Date.now()
+                            };
+                            saveSharedData(data);
+                        }, 1000);
+                    };
+                }
+            } catch (error) {
+                console.log('Screen capture not available:', error);
+                // If screen capture fails, use fallback method
+                useFallbackScreenCapture();
+            }
+        }
+        
+        // Fallback screen capture method
+        function useFallbackScreenCapture() {
+            // Create a simple representation of the current view
+            const canvas = document.createElement('canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const ctx = canvas.getContext('2d');
+            
+            // Capture the visible browser area
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add current URL as text
+            ctx.fillStyle = '#000000';
+            ctx.font = '16px Arial';
+            ctx.fillText('Current URL: ' + (currentStudent.currentUrl || 'Home Screen'), 20, 40);
+            ctx.fillText('Student: ' + currentStudent.name, 20, 70);
+            ctx.fillText('Class: ' + currentStudent.classCode, 20, 100);
+            ctx.fillText('Time: ' + new Date().toLocaleTimeString(), 20, 130);
+            
+            // Convert to data URL
+            const imageData = canvas.toDataURL('image/jpeg', 0.5);
+            
+            // Save screen capture to shared data
+            const data = getSharedData();
+            if (!data.students[currentStudent.id]) return;
+            
+            data.students[currentStudent.id].screenCapture = {
+                imageData: imageData,
+                timestamp: Date.now(),
+                isFallback: true
+            };
+            saveSharedData(data);
         }
         
         function startActivityReporting() {
@@ -589,8 +726,6 @@
             if (!currentStudent) return;
             
             currentStudent.lastActive = Date.now();
-            currentStudent.active = true;
-            currentStudent.isRestricted = isRestricted;
             
             // Update in shared data
             const data = getSharedData();
@@ -606,6 +741,16 @@
         }
         
         function navigateToUrl() {
+            // Check if browser is locked
+            const data = getSharedData();
+            const classSettings = data.classSettings && data.classSettings[currentClassCode] ? data.classSettings[currentClassCode] : { allowBrowsing: true };
+            const studentLocked = data.studentLocks && data.studentLocks[studentId];
+            
+            if (classSettings.allowBrowsing === false || studentLocked) {
+                showLockedMessage();
+                return;
+            }
+            
             const urlInput = document.getElementById('browserUrl');
             let url = urlInput.value.trim();
             
@@ -620,8 +765,9 @@
             // Extract domain for blocking check
             const domain = extractDomain(fullUrl);
             
-            // Check if website is blocked (only if student is restricted)
-            if (isRestricted && isUrlBlocked(domain)) {
+            // Check if website is blocked (always check if blocking is enabled for class)
+            const blockingEnabled = classSettings.blockingEnabled !== false; // Default to true
+            if (blockingEnabled && isUrlBlocked(domain)) {
                 showBlockedMessage(domain);
                 return;
             }
@@ -630,31 +776,29 @@
             document.getElementById('loadingMessage').style.display = 'block';
             document.getElementById('homeScreen').style.display = 'none';
             document.getElementById('blockedMessage').style.display = 'none';
+            document.getElementById('lockedMessage').style.display = 'none';
             document.getElementById('browserFrame').style.display = 'none';
             document.getElementById('iframeFallback').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
             
-            // Try to load in iframe with CORS proxy
+            // Try to load in iframe
             setTimeout(() => {
                 const frame = document.getElementById('browserFrame');
                 frame.style.display = 'block';
                 
-                // Use CORS proxy to bypass iframe restrictions
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(fullUrl)}`;
-                frame.src = proxyUrl;
+                // Set the iframe source
+                frame.src = fullUrl;
                 
                 frame.onload = function() {
                     document.getElementById('loadingMessage').style.display = 'none';
                 };
                 
                 frame.onerror = function() {
-                    // If iframe fails, show fallback and open in new tab
+                    // If iframe fails, show fallback
                     document.getElementById('loadingMessage').style.display = 'none';
                     document.getElementById('browserFrame').style.display = 'none';
                     document.getElementById('iframeFallback').style.display = 'block';
                     document.getElementById('fallbackUrl').textContent = fullUrl;
-                    
-                    // Automatically open in new tab
                     window.open(fullUrl, '_blank');
                 };
                 
@@ -662,6 +806,16 @@
                 currentStudent.currentUrl = fullUrl;
                 updateStudentInSharedData();
             }, 500);
+        }
+
+        function showLockedMessage() {
+            document.getElementById('lockedMessage').style.display = 'flex';
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('blockedMessage').style.display = 'none';
+            document.getElementById('browserFrame').style.display = 'none';
+            document.getElementById('iframeFallback').style.display = 'none';
+            document.getElementById('teacherControlNotice').style.display = 'none';
+            document.getElementById('loadingMessage').style.display = 'none';
         }
 
         function extractDomain(url) {
@@ -675,8 +829,6 @@
         }
         
         function isUrlBlocked(domain) {
-            if (!isRestricted) return false;
-            
             const data = getSharedData();
             const blockedSites = data.blockedSites || [];
             
@@ -694,6 +846,7 @@
             document.getElementById('browserFrame').style.display = 'none';
             document.getElementById('iframeFallback').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
+            document.getElementById('lockedMessage').style.display = 'none';
             document.getElementById('blockedUrlText').textContent = url;
             
             currentStudent.currentUrl = 'BLOCKED: ' + url;
@@ -715,6 +868,7 @@
             document.getElementById('loadingMessage').style.display = 'none';
             document.getElementById('iframeFallback').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
+            document.getElementById('lockedMessage').style.display = 'none';
             document.getElementById('homeScreen').style.display = 'block';
             document.getElementById('browserUrl').value = '';
             
@@ -729,6 +883,14 @@
                 if (data.students[currentStudent.id]) {
                     data.students[currentStudent.id].active = false;
                     saveSharedData(data);
+                }
+                
+                // Stop screen sharing
+                if (screenSharingInterval) {
+                    clearInterval(screenSharingInterval);
+                }
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
                 }
             }
             
@@ -752,21 +914,20 @@
         // Check for restriction updates
         function checkRestrictionStatus() {
             const data = getSharedData();
-            const restrictedStudents = data.restrictedStudents || {};
-            const wasRestricted = isRestricted;
-            isRestricted = restrictedStudents[studentId] || false;
+            const classSettings = data.classSettings && data.classSettings[currentClassCode] ? data.classSettings[currentClassCode] : { allowBrowsing: true, blockingEnabled: true };
+            const studentLocked = data.studentLocks && data.studentLocks[studentId];
             
             // Show/hide restriction notice
             const notice = document.getElementById('restrictionNotice');
-            if (isRestricted) {
+            if (classSettings.blockingEnabled) {
                 notice.style.display = 'block';
             } else {
                 notice.style.display = 'none';
             }
             
-            // Show notice if just restricted
-            if (isRestricted && !wasRestricted) {
-                alert('🔒 TEACHER NOTICE: Your browsing has been restricted to educational sites only.');
+            // Show locked message if browser is locked
+            if (classSettings.allowBrowsing === false || studentLocked) {
+                showLockedMessage();
             }
         }
 
