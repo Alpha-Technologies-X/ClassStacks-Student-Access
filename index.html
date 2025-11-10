@@ -115,13 +115,6 @@
             display: none;
         }
         
-        .browser-header {
-            background: var(--primary);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        
         .student-info {
             position: fixed;
             top: 10px;
@@ -132,6 +125,13 @@
             border-radius: 20px;
             font-size: 0.9rem;
             z-index: 1000;
+        }
+        
+        .browser-header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
         }
         
         .browser-controls {
@@ -217,7 +217,7 @@
             margin-bottom: 10px;
         }
         
-        .blocked-message {
+        .blocked-message, .locked-message {
             display: none;
             background: #ffebee;
             color: #c62828;
@@ -229,26 +229,9 @@
             justify-content: center;
         }
         
-        .blocked-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-        }
-        
         .locked-message {
-            display: none;
             background: #e9ecef;
             color: #6c757d;
-            padding: 40px;
-            text-align: center;
-            height: 100%;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .locked-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
         }
         
         .home-screen {
@@ -405,46 +388,6 @@
             margin-top: 20px;
         }
 
-        .screenshot-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1002;
-        }
-
-        .screenshot-container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 500px;
-        }
-
-        .screenshot-canvas {
-            max-width: 100%;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-        }
-
-        .browser-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: none;
-        }
-
-        .iframe-fallback {
-            display: none;
-            padding: 40px;
-            text-align: center;
-        }
-
         .connection-status {
             position: fixed;
             bottom: 20px;
@@ -455,6 +398,25 @@
             border-radius: 20px;
             font-size: 0.8rem;
             z-index: 1000;
+        }
+        
+        .new-tab-notice {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .browser-controls {
+                flex-direction: column;
+            }
+            
+            .url-input-container {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -492,10 +454,12 @@
                 2. Enter your name and the class code<br>
                 3. Click "Enter Browser" to start
             </div>
-
-            <div id="debugInfo" style="margin-top: 15px; padding: 10px; background: #e7f3ff; border-radius: 5px; font-size: 12px; display: none;">
-                <strong>Debug Info:</strong><br>
-                <span id="debugText"></span>
+            
+            <div style="margin-top: 15px; padding: 15px; background: #e7f3ff; border-radius: 10px; font-size: 14px;">
+                <strong>Demo Class Codes:</strong><br>
+                • MATH101 (Mathematics Grade 5)<br>
+                • SCI202 (Science Grade 6)<br>
+                • ENG303 (English Grade 7)
             </div>
         </div>
     </div>
@@ -505,7 +469,6 @@
         <div class="student-info">
             Student: <span id="studentNameDisplay">Unknown</span> | 
             Class: <span id="classCodeDisplay">Unknown</span>
-            <div class="screen-sharing-status" id="screenSharingStatus">📹 Auto Screenshots Active</div>
             <button class="btn-danger" onclick="logout()" style="margin-left: 10px; padding: 5px 10px; font-size: 0.8rem;">Exit</button>
         </div>
         
@@ -524,7 +487,7 @@
         
         <div class="browser-content" id="browserContent">
             <div class="locked-message" id="lockedMessage">
-                <div class="locked-icon">🔒</div>
+                <div style="font-size: 4rem; margin-bottom: 20px;">🔒</div>
                 <h2>Browser Locked</h2>
                 <p>Your teacher has locked your browser.</p>
                 <p>You cannot access any websites at this time.</p>
@@ -538,7 +501,7 @@
             </div>
             
             <div class="blocked-message" id="blockedMessage">
-                <div class="blocked-icon">🚫</div>
+                <div style="font-size: 4rem; margin-bottom: 20px;">🚫</div>
                 <h2>Website Blocked</h2>
                 <p>This website has been restricted by your teacher.</p>
                 <p id="blockedUrlText" style="font-family: monospace; margin: 10px 0; font-size: 1.1rem;"></p>
@@ -563,16 +526,14 @@
                 </div>
             </div>
 
-            <div class="iframe-fallback" id="iframeFallback">
+            <div class="new-tab-notice" id="newTabNotice" style="display: none;">
                 <div style="font-size: 3rem; margin-bottom: 20px;">🌐</div>
-                <h3>Website Loaded in New Tab</h3>
+                <h3>Website Opened in New Tab</h3>
                 <p>This website doesn't allow embedding for security reasons.</p>
                 <p>It has been opened in a new browser tab for you.</p>
-                <p id="fallbackUrl" style="margin: 15px 0; font-family: monospace;"></p>
+                <p id="newTabUrl" style="margin: 15px 0; font-family: monospace;"></p>
                 <button class="btn" onclick="goHome()" style="margin-top: 20px;">Return to Browser Home</button>
             </div>
-            
-            <iframe class="browser-frame" id="browserFrame"></iframe>
             
             <div class="home-screen" id="homeScreen">
                 <div class="welcome-message">
@@ -581,9 +542,9 @@
                 </div>
 
                 <div class="screen-sharing-notice">
-                    <h4>📹 Auto Screenshots Active</h4>
-                    <p>Your teacher can view screenshots of your screen to help with your work.</p>
-                    <p><small>Screenshots are taken automatically every 2.5 seconds</small></p>
+                    <h4>📹 Activity Monitoring Active</h4>
+                    <p>Your teacher can view your browsing activity to help with your work.</p>
+                    <p><small>Activity is updated every 2.5 seconds</small></p>
                 </div>
 
                 <div id="restrictionNotice" class="restriction-notice" style="display: none;">
@@ -594,13 +555,13 @@
                 <div class="url-examples">
                     <h4>💡 Try these URLs:</h4>
                     <span class="url-example" onclick="visitWebsite('google.com')">google.com</span>
+                    <span class="url-example" onclick="visitWebsite('youtube.com')">youtube.com</span>
                     <span class="url-example" onclick="visitWebsite('wikipedia.org')">wikipedia.org</span>
                     <span class="url-example" onclick="visitWebsite('khanacademy.org')">khanacademy.org</span>
                     <span class="url-example" onclick="visitWebsite('github.com')">github.com</span>
                     <span class="url-example" onclick="visitWebsite('stackoverflow.com')">stackoverflow.com</span>
                     <span class="url-example" onclick="visitWebsite('code.org')">code.org</span>
                     <span class="url-example" onclick="visitWebsite('duolingo.com')">duolingo.com</span>
-                    <span class="url-example" onclick="visitWebsite('youtube.com')">youtube.com</span>
                 </div>
                 
                 <div class="website-list">
@@ -682,22 +643,10 @@
         <button class="btn" onclick="closeMessage()" style="margin-top: 10px; padding: 8px 15px;">OK</button>
     </div>
 
-    <!-- Screenshot Overlay -->
-    <div class="screenshot-overlay" id="screenshotOverlay">
-        <div class="screenshot-container">
-            <h3>📸 Screenshot Requested</h3>
-            <p>Your teacher is requesting a screenshot of your screen.</p>
-            <canvas id="screenshotCanvas" class="screenshot-canvas"></canvas>
-            <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
-                <button class="btn btn-success" onclick="takeScreenshot()">Take Screenshot</button>
-                <button class="btn btn-danger" onclick="cancelScreenshot()">Cancel</button>
-            </div>
-        </div>
-    </div>
-
     <div class="connection-status" id="connectionStatus">🔄 Connected</div>
 
     <script>
+        // Student browser JavaScript
         let currentStudent = null;
         let lastUpdateCheck = 0;
         let lastMessageCheck = 0;
@@ -705,7 +654,7 @@
         let currentClassCode = '';
         let currentUrl = '';
         let updateInterval;
-        let screenshotInterval;
+        let activityInterval;
 
         // Check for existing session on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -732,7 +681,7 @@
             }
         });
 
-        // Student authentication - FIXED VERSION
+        // Student authentication
         document.getElementById('authForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -759,18 +708,8 @@
             setTimeout(() => {
                 const data = getSharedData();
                 
-                // Debug information
-                const debugInfo = document.getElementById('debugInfo');
-                const debugText = document.getElementById('debugText');
-                debugInfo.style.display = 'block';
-                debugText.innerHTML = `
-                    Class Code Entered: ${classCode}<br>
-                    Classes in System: ${Object.keys(data.classes || {}).join(', ') || 'None'}<br>
-                    Class Settings: ${JSON.stringify(data.classSettings || {})}
-                `;
-
-                // Check if class exists in classSettings (where teacher creates classes)
-                const classExists = data.classSettings && data.classSettings[classCode];
+                // Check if class exists in classes
+                const classExists = data.classes && data.classes[classCode];
                 
                 if (classExists) {
                     // Class code is valid - create student session
@@ -783,6 +722,7 @@
                         classCode: classCode,
                         lastActive: Date.now(),
                         currentUrl: '',
+                        currentActivity: 'Logged in to browser',
                         device: getDeviceInfo(),
                         connected: true
                     };
@@ -793,15 +733,11 @@
                     // Save student data
                     localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
                     showStudentBrowser();
-                    
-                    debugText.innerHTML += '<br><strong style="color: green;">✓ Successfully connected!</strong>';
                 } else {
                     // Class code doesn't exist
                     showError(`Class code "${classCode}" not found. Please check with your teacher.`);
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
-                    
-                    debugText.innerHTML += '<br><strong style="color: red;">✗ Class code not found in system</strong>';
                 }
             }, 1000);
         });
@@ -809,6 +745,7 @@
         // Register student with teacher dashboard
         function registerStudent() {
             const data = getSharedData();
+            if (!data.students) data.students = {};
             data.students[currentStudent.id] = currentStudent;
             
             // Ensure the class exists in classes object
@@ -846,7 +783,6 @@
                 teacherControl: {},
                 messages: {},
                 studentLocks: {},
-                screenshots: {},
                 activityLogs: {},
                 lastUpdated: Date.now()
             };
@@ -899,22 +835,12 @@
             
             // Start monitoring for teacher commands
             startMonitoring();
-            
-            // Start automatic screenshots
-            startAutomaticScreenshots();
         }
         
         function startActivityReporting() {
-            // Report activity every 5 seconds
-            setInterval(() => {
+            // Report activity every 2.5 seconds
+            activityInterval = setInterval(() => {
                 reportStudentActivity();
-            }, 5000);
-        }
-
-        function startAutomaticScreenshots() {
-            // Take screenshots every 2.5 seconds
-            screenshotInterval = setInterval(() => {
-                takeAutomaticScreenshot();
             }, 2500);
         }
         
@@ -926,6 +852,7 @@
             
             // Update in shared data
             const data = getSharedData();
+            if (!data.students) data.students = {};
             data.students[currentStudent.id] = currentStudent;
             const success = saveSharedData(data);
             
@@ -947,7 +874,6 @@
                 checkRestrictionStatus();
                 checkForMessages();
                 checkForTeacherControl();
-                checkForScreenshotRequests();
                 reportStudentActivity();
                 
                 // Check for teacher updates
@@ -956,19 +882,8 @@
                     lastUpdateCheck = data.lastUpdated;
                     checkRestrictionStatus();
                     checkForTeacherControl();
-                    checkForScreenshotRequests();
                 }
             }, 2000);
-            
-            // Listen for storage events
-            window.addEventListener('storage', function(e) {
-                if (e.key === 'classStacksData') {
-                    checkRestrictionStatus();
-                    checkForMessages();
-                    checkForTeacherControl();
-                    checkForScreenshotRequests();
-                }
-            });
         }
         
         function visitWebsite(url) {
@@ -1015,8 +930,7 @@
             document.getElementById('lockedMessage').style.display = 'none';
             document.getElementById('websiteView').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
-            document.getElementById('browserFrame').style.display = 'none';
-            document.getElementById('iframeFallback').style.display = 'none';
+            document.getElementById('newTabNotice').style.display = 'none';
             
             // Log the website visit
             const sharedData = getSharedData();
@@ -1028,47 +942,46 @@
             });
             saveSharedData(sharedData);
             
-            // Try to load in iframe first
-            const frame = document.getElementById('browserFrame');
-            frame.style.display = 'block';
-            frame.src = fullUrl;
+            // Update current activity
+            currentStudent.currentActivity = `Browsing: ${getWebsiteName(domain)}`;
+            currentStudent.currentUrl = fullUrl;
             
-            frame.onload = function() {
-                document.getElementById('loadingMessage').style.display = 'none';
-                currentUrl = fullUrl;
-                currentStudent.currentUrl = fullUrl;
-                updateStudentInSharedData();
-            };
+            // Check if website allows embedding (common sites that block embedding)
+            const sitesThatBlockEmbedding = [
+                'google.com', 'youtube.com', 'facebook.com', 'instagram.com',
+                'twitter.com', 'linkedin.com', 'netflix.com', 'spotify.com'
+            ];
             
-            frame.onerror = function() {
-                // If iframe fails, show fallback and open in new tab
-                document.getElementById('loadingMessage').style.display = 'none';
-                document.getElementById('browserFrame').style.display = 'none';
-                document.getElementById('iframeFallback').style.display = 'block';
-                document.getElementById('fallbackUrl').textContent = fullUrl;
-                
-                // Open website in new tab
-                window.open(fullUrl, '_blank');
-                
-                // Show website preview
-                currentUrl = fullUrl;
-                const domainName = extractDomain(fullUrl);
-                document.getElementById('currentWebsiteUrl').textContent = fullUrl;
-                document.getElementById('currentWebsiteName').textContent = getWebsiteName(domainName);
-                document.getElementById('currentWebsiteIcon').textContent = getWebsiteIcon(domainName);
-                
-                // Update student activity
-                currentStudent.currentUrl = fullUrl;
-                updateStudentInSharedData();
-            };
+            const blocksEmbedding = sitesThatBlockEmbedding.some(site => 
+                domain.includes(site)
+            );
             
-            // Set timeout for iframe loading
-            setTimeout(() => {
-                if (document.getElementById('loadingMessage').style.display === 'block') {
-                    // If still loading, assume iframe failed
-                    frame.onerror();
-                }
-            }, 3000);
+            if (blocksEmbedding) {
+                // Open in new tab and show notice
+                setTimeout(() => {
+                    document.getElementById('loadingMessage').style.display = 'none';
+                    document.getElementById('newTabNotice').style.display = 'block';
+                    document.getElementById('newTabUrl').textContent = fullUrl;
+                    
+                    // Open website in new tab
+                    window.open(fullUrl, '_blank');
+                }, 1000);
+            } else {
+                // Show website preview (simulated)
+                setTimeout(() => {
+                    document.getElementById('loadingMessage').style.display = 'none';
+                    document.getElementById('websiteView').style.display = 'flex';
+                    
+                    const domainName = extractDomain(fullUrl);
+                    document.getElementById('currentWebsiteUrl').textContent = fullUrl;
+                    document.getElementById('currentWebsiteName').textContent = getWebsiteName(domainName);
+                    document.getElementById('currentWebsiteIcon').textContent = getWebsiteIcon(domainName);
+                    
+                    // Update student activity
+                    currentStudent.currentUrl = fullUrl;
+                    updateStudentInSharedData();
+                }, 1500);
+            }
         }
 
         function showLockedMessage() {
@@ -1076,13 +989,11 @@
             document.getElementById('homeScreen').style.display = 'none';
             document.getElementById('blockedMessage').style.display = 'none';
             document.getElementById('websiteView').style.display = 'none';
-            document.getElementById('teacherControlNotice').style.display = 'none';
-            document.getElementById('loadingMessage').style.display = 'none';
-            document.getElementById('browserFrame').style.display = 'none';
-            document.getElementById('iframeFallback').style.display = 'none';
+            document.getElementById('newTabNotice').style.display = 'none';
             
             currentUrl = '';
             currentStudent.currentUrl = '';
+            currentStudent.currentActivity = 'Browser locked by teacher';
             updateStudentInSharedData();
         }
 
@@ -1111,16 +1022,14 @@
         function showBlockedMessage(url) {
             document.getElementById('blockedMessage').style.display = 'flex';
             document.getElementById('homeScreen').style.display = 'none';
-            document.getElementById('websiteView').style.display = 'none';
-            document.getElementById('teacherControlNotice').style.display = 'none';
             document.getElementById('lockedMessage').style.display = 'none';
-            document.getElementById('loadingMessage').style.display = 'none';
-            document.getElementById('browserFrame').style.display = 'none';
-            document.getElementById('iframeFallback').style.display = 'none';
+            document.getElementById('websiteView').style.display = 'none';
+            document.getElementById('newTabNotice').style.display = 'none';
             document.getElementById('blockedUrlText').textContent = url;
             
             currentUrl = 'BLOCKED: ' + url;
             currentStudent.currentUrl = currentUrl;
+            currentStudent.currentActivity = 'Attempted to visit blocked site';
             updateStudentInSharedData();
         }
         
@@ -1131,22 +1040,23 @@
             
             currentUrl = '';
             currentStudent.currentUrl = '';
+            currentStudent.currentActivity = 'Browsing home screen';
             updateStudentInSharedData();
         }
         
         function goHome() {
             document.getElementById('websiteView').style.display = 'none';
             document.getElementById('blockedMessage').style.display = 'none';
+            document.getElementById('lockedMessage').style.display = 'none';
             document.getElementById('loadingMessage').style.display = 'none';
             document.getElementById('teacherControlNotice').style.display = 'none';
-            document.getElementById('lockedMessage').style.display = 'none';
-            document.getElementById('browserFrame').style.display = 'none';
-            document.getElementById('iframeFallback').style.display = 'none';
+            document.getElementById('newTabNotice').style.display = 'none';
             document.getElementById('homeScreen').style.display = 'block';
             document.getElementById('browserUrl').value = '';
             
             currentUrl = '';
             currentStudent.currentUrl = '';
+            currentStudent.currentActivity = 'Browsing home screen';
             updateStudentInSharedData();
         }
         
@@ -1168,12 +1078,12 @@
                     saveSharedData(data);
                 }
                 
-                // Stop monitoring and screenshots
+                // Stop monitoring and activity reporting
                 if (updateInterval) {
                     clearInterval(updateInterval);
                 }
-                if (screenshotInterval) {
-                    clearInterval(screenshotInterval);
+                if (activityInterval) {
+                    clearInterval(activityInterval);
                 }
             }
             
@@ -1181,7 +1091,6 @@
             document.getElementById('studentBrowser').style.display = 'none';
             document.getElementById('authContainer').style.display = 'flex';
             document.getElementById('authForm').reset();
-            document.getElementById('debugInfo').style.display = 'none';
             currentStudent = null;
             studentId = null;
             currentClassCode = '';
@@ -1250,7 +1159,7 @@
                     document.getElementById('teacherControlNotice').style.display = 'block';
                     document.getElementById('homeScreen').style.display = 'none';
                     document.getElementById('websiteView').style.display = 'none';
-                    document.getElementById('browserFrame').style.display = 'none';
+                    document.getElementById('newTabNotice').style.display = 'none';
                     
                     lastUpdateCheck = controlCommand.timestamp;
                 }
@@ -1282,265 +1191,6 @@
                 
                 document.getElementById('teacherControlNotice').style.display = 'none';
             }
-        }
-
-        // Check for screenshot requests
-        function checkForScreenshotRequests() {
-            if (!studentId) return;
-
-            const data = getSharedData();
-            const screenshots = data.screenshots || {};
-            const screenshotRequest = screenshots[studentId];
-            
-            if (screenshotRequest && screenshotRequest.requested && screenshotRequest.timestamp > lastUpdateCheck) {
-                // Show screenshot overlay
-                document.getElementById('screenshotOverlay').style.display = 'flex';
-                lastUpdateCheck = screenshotRequest.timestamp;
-            }
-        }
-
-        // Take automatic screenshot (every 2.5 seconds)
-        function takeAutomaticScreenshot() {
-            if (!studentId || document.getElementById('lockedMessage').style.display === 'flex') return;
-            
-            const canvas = document.getElementById('screenshotCanvas');
-            const context = canvas.getContext('2d');
-            
-            // Set canvas size to match browser content
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight - 160; // Account for header and controls
-            
-            // Draw the current browser content representation
-            context.fillStyle = '#ffffff';
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw current view representation
-            if (currentUrl && document.getElementById('browserFrame').style.display === 'block') {
-                // If we're in iframe mode, draw iframe representation
-                context.fillStyle = '#f0f0f0';
-                context.fillRect(20, 20, canvas.width - 40, canvas.height - 40);
-                
-                context.fillStyle = '#000000';
-                context.font = 'bold 20px Arial';
-                context.fillText('Website View (Iframe)', 40, 50);
-                
-                context.font = '16px Arial';
-                context.fillText(`URL: ${currentUrl}`, 40, 80);
-                
-                // Draw browser controls representation
-                context.fillStyle = '#e9ecef';
-                context.fillRect(20, 100, canvas.width - 40, 40);
-                context.fillStyle = '#000000';
-                context.fillText('Browser Navigation Bar', 40, 125);
-            } else if (currentUrl) {
-                // Draw website preview representation
-                const domain = extractDomain(currentUrl);
-                
-                context.fillStyle = getWebsiteColor(domain);
-                context.fillRect(0, 0, canvas.width, 120);
-                
-                context.fillStyle = '#ffffff';
-                context.font = 'bold 24px Arial';
-                context.fillText(getWebsiteName(domain), 40, 50);
-                
-                context.font = '16px Arial';
-                context.fillText(currentUrl, 40, 80);
-                
-                // Draw content area
-                context.fillStyle = '#f8f9fa';
-                context.fillRect(0, 120, canvas.width, canvas.height - 120);
-                
-                context.fillStyle = '#666';
-                context.font = '14px Arial';
-                context.fillText('Website content would appear here', 40, 160);
-                context.fillText('Actual screenshots show real student activity', 40, 185);
-            } else {
-                // Draw home screen representation
-                context.fillStyle = '#4361ee';
-                context.fillRect(0, 0, canvas.width, 120);
-                
-                context.fillStyle = '#ffffff';
-                context.font = 'bold 24px Arial';
-                context.fillText('Class Stacks Browser', 40, 50);
-                
-                context.font = '16px Arial';
-                context.fillText('Educational Browser - Teacher Monitored', 40, 80);
-                
-                // Draw quick access icons
-                const websites = ['Google', 'Wikipedia', 'Khan Academy', 'GitHub'];
-                for (let i = 0; i < websites.length; i++) {
-                    const x = 40 + (i * 120);
-                    const y = 150;
-                    
-                    context.fillStyle = '#e9ecef';
-                    context.fillRect(x, y, 80, 80);
-                    
-                    context.fillStyle = '#000000';
-                    context.font = '12px Arial';
-                    context.fillText(websites[i], x, y + 100);
-                }
-            }
-            
-            // Draw student info overlay
-            context.fillStyle = 'rgba(0,0,0,0.7)';
-            context.fillRect(canvas.width - 300, canvas.height - 60, 300, 60);
-            
-            context.fillStyle = '#ffffff';
-            context.font = '12px Arial';
-            context.fillText(`Student: ${currentStudent.name}`, canvas.width - 280, canvas.height - 40);
-            context.fillText(`Class: ${currentStudent.classCode}`, canvas.width - 280, canvas.height - 20);
-            context.fillText(`Time: ${new Date().toLocaleTimeString()}`, canvas.width - 140, canvas.height - 20);
-            
-            // Convert to data URL and save
-            const imageData = canvas.toDataURL('image/png');
-            
-            const data = getSharedData();
-            if (!data.screenshots) data.screenshots = {};
-            data.screenshots[studentId] = {
-                imageData: imageData,
-                timestamp: Date.now(),
-                requested: false
-            };
-            
-            saveSharedData(data);
-        }
-
-        // Take manual screenshot (when requested by teacher)
-        function takeScreenshot() {
-            const canvas = document.getElementById('screenshotCanvas');
-            const context = canvas.getContext('2d');
-            
-            // Set canvas size to match browser content
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight - 160;
-            
-            // Draw the current browser content representation
-            context.fillStyle = '#ffffff';
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw current view representation (same as automatic but with "REQUESTED" label)
-            if (currentUrl && document.getElementById('browserFrame').style.display === 'block') {
-                context.fillStyle = '#f0f0f0';
-                context.fillRect(20, 20, canvas.width - 40, canvas.height - 40);
-                
-                context.fillStyle = '#000000';
-                context.font = 'bold 20px Arial';
-                context.fillText('Website View (Iframe) - REQUESTED', 40, 50);
-                
-                context.font = '16px Arial';
-                context.fillText(`URL: ${currentUrl}`, 40, 80);
-                
-                context.fillStyle = '#e9ecef';
-                context.fillRect(20, 100, canvas.width - 40, 40);
-                context.fillStyle = '#000000';
-                context.fillText('Browser Navigation Bar', 40, 125);
-            } else if (currentUrl) {
-                const domain = extractDomain(currentUrl);
-                
-                context.fillStyle = getWebsiteColor(domain);
-                context.fillRect(0, 0, canvas.width, 120);
-                
-                context.fillStyle = '#ffffff';
-                context.font = 'bold 24px Arial';
-                context.fillText(getWebsiteName(domain) + ' - REQUESTED', 40, 50);
-                
-                context.font = '16px Arial';
-                context.fillText(currentUrl, 40, 80);
-                
-                context.fillStyle = '#f8f9fa';
-                context.fillRect(0, 120, canvas.width, canvas.height - 120);
-                
-                context.fillStyle = '#666';
-                context.font = '14px Arial';
-                context.fillText('Website content would appear here', 40, 160);
-                context.fillText('Teacher-requested screenshot', 40, 185);
-            } else {
-                context.fillStyle = '#4361ee';
-                context.fillRect(0, 0, canvas.width, 120);
-                
-                context.fillStyle = '#ffffff';
-                context.font = 'bold 24px Arial';
-                context.fillText('Class Stacks Browser - REQUESTED', 40, 50);
-                
-                context.font = '16px Arial';
-                context.fillText('Educational Browser - Teacher Monitored', 40, 80);
-                
-                const websites = ['Google', 'Wikipedia', 'Khan Academy', 'GitHub'];
-                for (let i = 0; i < websites.length; i++) {
-                    const x = 40 + (i * 120);
-                    const y = 150;
-                    
-                    context.fillStyle = '#e9ecef';
-                    context.fillRect(x, y, 80, 80);
-                    
-                    context.fillStyle = '#000000';
-                    context.font = '12px Arial';
-                    context.fillText(websites[i], x, y + 100);
-                }
-            }
-            
-            // Draw student info overlay
-            context.fillStyle = 'rgba(0,0,0,0.7)';
-            context.fillRect(canvas.width - 300, canvas.height - 60, 300, 60);
-            
-            context.fillStyle = '#ffffff';
-            context.font = '12px Arial';
-            context.fillText(`Student: ${currentStudent.name}`, canvas.width - 280, canvas.height - 40);
-            context.fillText(`Class: ${currentStudent.classCode}`, canvas.width - 280, canvas.height - 20);
-            context.fillText(`Time: ${new Date().toLocaleTimeString()}`, canvas.width - 140, canvas.height - 20);
-            
-            // Convert to data URL and save
-            const imageData = canvas.toDataURL('image/png');
-            
-            const data = getSharedData();
-            if (!data.screenshots) data.screenshots = {};
-            data.screenshots[studentId] = {
-                imageData: imageData,
-                timestamp: Date.now(),
-                requested: false
-            };
-            
-            // Log the screenshot
-            if (!data.activityLogs) data.activityLogs = {};
-            if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
-            data.activityLogs[studentId].push({
-                action: 'Screenshot taken by teacher request',
-                timestamp: Date.now()
-            });
-            
-            saveSharedData(data);
-            
-            // Hide overlay
-            document.getElementById('screenshotOverlay').style.display = 'none';
-            
-            alert('Screenshot sent to teacher');
-        }
-
-        function cancelScreenshot() {
-            document.getElementById('screenshotOverlay').style.display = 'none';
-            
-            // Mark request as cancelled
-            const data = getSharedData();
-            if (data.screenshots && data.screenshots[studentId]) {
-                data.screenshots[studentId].requested = false;
-                saveSharedData(data);
-            }
-        }
-
-        // Get website color for screenshot representation
-        function getWebsiteColor(domain) {
-            const colors = {
-                'google.com': '#4285f4',
-                'youtube.com': '#ff0000',
-                'wikipedia.org': '#000000',
-                'khanacademy.org': '#14bf96',
-                'github.com': '#24292e',
-                'duolingo.com': '#58cc02',
-                'stackoverflow.com': '#f48024',
-                'code.org': '#0fbd8c',
-                'w3schools.com': '#04aa6d'
-            };
-            return colors[domain] || '#4361ee';
         }
 
         // Check for new messages from teacher
