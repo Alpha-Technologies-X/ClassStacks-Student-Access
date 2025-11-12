@@ -12,6 +12,9 @@
             --success: #2a9d8f;
             --dark: #212529;
             --light: #f8f9fa;
+            --tab-active: #ffffff;
+            --tab-inactive: #f1f3f4;
+            --tab-border: #dadce0;
         }
         
         * {
@@ -113,34 +116,155 @@
         
         .student-browser {
             display: none;
+            height: 100vh;
+            flex-direction: column;
+            background: white;
         }
         
-        .student-info {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            z-index: 1000;
-        }
-        
+        /* Browser Header */
         .browser-header {
             background: var(--primary);
             color: white;
-            padding: 20px;
-            text-align: center;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .student-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .student-details {
+            font-size: 0.9rem;
+        }
+        
+        .student-details strong {
+            font-size: 1rem;
+        }
+        
+        /* Tab Bar */
+        .tab-bar {
+            display: flex;
+            background: var(--tab-inactive);
+            border-bottom: 1px solid var(--tab-border);
+            padding: 0 10px;
+            align-items: center;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background: var(--tab-inactive);
+            border-right: 1px solid var(--tab-border);
+            min-width: 200px;
+            max-width: 300px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .tab.active {
+            background: var(--tab-active);
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .tab-favicon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+        
+        .tab-title {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.9rem;
+        }
+        
+        .tab-close {
+            margin-left: 8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        
+        .tab-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .new-tab-btn {
+            padding: 10px 15px;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .new-tab-btn:hover {
+            color: var(--primary);
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Browser Controls */
         .browser-controls {
             display: flex;
-            padding: 20px;
+            padding: 15px 20px;
             background: #f8f9fa;
             border-bottom: 1px solid #e9ecef;
-            gap: 15px;
+            gap: 10px;
             align-items: center;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .nav-btn {
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #e1e5ee;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
         .url-input-container {
@@ -154,7 +278,7 @@
         
         .url-input {
             flex: 1;
-            padding: 12px 20px;
+            padding: 10px 20px;
             border: none;
             font-size: 16px;
         }
@@ -164,36 +288,60 @@
         }
         
         .go-button {
-            padding: 12px 25px;
+            padding: 10px 20px;
             background: var(--primary);
             color: white;
             border: none;
             cursor: pointer;
+            transition: all 0.3s;
         }
         
-        .browser-content {
-            height: calc(100vh - 160px);
+        .go-button:hover {
+            background: var(--secondary);
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .tab-content.active {
+            display: flex;
+        }
+        
+        .browser-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            flex: 1;
+        }
+        
+        /* Home Screen */
+        .home-screen {
+            padding: 40px;
+            text-align: center;
             background: white;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         
-        .website-list {
-            padding: 30px;
-        }
-        
-        .website-category {
-            margin-bottom: 30px;
-        }
-        
-        .website-category h3 {
-            margin-bottom: 15px;
+        .welcome-message {
+            font-size: 1.5rem;
             color: var(--primary);
-            font-size: 1.2rem;
+            margin-bottom: 30px;
         }
         
         .website-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
         }
         
         .website-item {
@@ -217,6 +365,7 @@
             margin-bottom: 10px;
         }
         
+        /* Blocked/Locked Messages */
         .blocked-message, .locked-message {
             display: none;
             background: #ffebee;
@@ -234,28 +383,80 @@
             color: #6c757d;
         }
         
-        .home-screen {
-            padding: 40px;
-            text-align: center;
+        .message-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
         }
         
-        .welcome-message {
-            font-size: 1.5rem;
-            color: var(--primary);
-            margin-bottom: 30px;
-        }
-
+        /* Loading Message */
         .loading-message {
             display: none;
             padding: 40px;
             text-align: center;
             font-size: 1.2rem;
             color: #666;
+            flex: 1;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
-
-        .message-notification {
+        
+        .loading-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        /* Bypass Panel */
+        .bypass-panel {
             position: fixed;
             top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 15px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .bypass-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .bypass-toggle {
+            background: var(--warning);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .bypass-input {
+            width: 150px;
+            padding: 8px;
+            border: 1px solid #e1e5ee;
+            border-radius: 5px;
+            margin-right: 5px;
+        }
+        
+        .bypass-submit {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        /* Teacher Messages */
+        .teacher-message {
+            position: fixed;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             background: var(--primary);
@@ -268,126 +469,18 @@
             max-width: 400px;
             text-align: center;
         }
-
+        
         .message-content {
             margin: 10px 0;
             font-size: 1.1rem;
         }
-
+        
         .message-from {
             font-size: 0.9rem;
             opacity: 0.8;
         }
-
-        .url-examples {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            font-size: 0.9rem;
-        }
-
-        .url-examples h4 {
-            margin-bottom: 10px;
-            color: var(--primary);
-        }
-
-        .url-example {
-            display: inline-block;
-            background: white;
-            padding: 5px 10px;
-            margin: 5px;
-            border-radius: 5px;
-            border: 1px solid #e1e5ee;
-            cursor: pointer;
-        }
-
-        .url-example:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        .restriction-notice {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: center;
-        }
         
-        .teacher-control-notice {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .screen-sharing-notice {
-            background: #e7f3ff;
-            border: 1px solid #b3d9ff;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .screen-sharing-status {
-            background: var(--success);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            display: inline-block;
-            margin: 10px 0;
-        }
-
-        .website-view {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: white;
-        }
-
-        .website-preview {
-            text-align: center;
-            padding: 40px;
-            max-width: 600px;
-        }
-
-        .website-preview-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-        }
-
-        .website-preview-name {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: var(--primary);
-        }
-
-        .website-preview-url {
-            font-family: monospace;
-            background: #f8f9fa;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            word-break: break-all;
-        }
-
-        .website-preview-status {
-            color: #666;
-            font-size: 0.9rem;
-            margin-top: 20px;
-        }
-
+        /* Connection Status */
         .connection-status {
             position: fixed;
             bottom: 20px;
@@ -400,23 +493,32 @@
             z-index: 1000;
         }
         
-        .new-tab-notice {
-            background: #e7f3ff;
-            border: 1px solid #b3d9ff;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px;
-            text-align: center;
+        /* Screenshot Overlay */
+        .screenshot-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1002;
         }
         
-        @media (max-width: 768px) {
-            .browser-controls {
-                flex-direction: column;
-            }
-            
-            .url-input-container {
-                width: 100%;
-            }
+        .screenshot-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+        }
+        
+        .screenshot-canvas {
+            max-width: 100%;
+            border: 2px solid #ddd;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -454,210 +556,204 @@
                 2. Enter your name and the class code<br>
                 3. Click "Enter Browser" to start
             </div>
-            
-            <div style="margin-top: 15px; padding: 15px; background: #e7f3ff; border-radius: 10px; font-size: 14px;">
-                <strong>Demo Class Codes:</strong><br>
-                • MATH101 (Mathematics Grade 5)<br>
-                • SCI202 (Science Grade 6)<br>
-                • ENG303 (English Grade 7)
-            </div>
         </div>
     </div>
 
     <!-- Student Browser -->
     <div class="student-browser" id="studentBrowser">
-        <div class="student-info">
-            Student: <span id="studentNameDisplay">Unknown</span> | 
-            Class: <span id="classCodeDisplay">Unknown</span>
-            <button class="btn-danger" onclick="logout()" style="margin-left: 10px; padding: 5px 10px; font-size: 0.8rem;">Exit</button>
-        </div>
-        
+        <!-- Browser Header -->
         <div class="browser-header">
-            <h2>🔒 Class Stacks Secure Browser</h2>
-            <p>Teacher Monitored • Educational Focus</p>
-        </div>
-        
-        <div class="browser-controls">
-            <div class="url-input-container">
-                <input type="text" class="url-input" id="browserUrl" placeholder="Type any website URL and press Enter (e.g., google.com, youtube.com)">
-                <button class="go-button" onclick="navigateToUrl()">Go</button>
-            </div>
-            <button class="btn" onclick="goHome()">🏠 Home</button>
-        </div>
-        
-        <div class="browser-content" id="browserContent">
-            <div class="locked-message" id="lockedMessage">
-                <div style="font-size: 4rem; margin-bottom: 20px;">🔒</div>
-                <h2>Browser Locked</h2>
-                <p>Your teacher has locked your browser.</p>
-                <p>You cannot access any websites at this time.</p>
-                <button class="btn" onclick="goHome()" style="margin-top: 20px;">Return to Home</button>
-            </div>
-            
-            <div class="teacher-control-notice" id="teacherControlNotice" style="display: none;">
-                <h4>🎮 Teacher Navigation</h4>
-                <p>Your teacher is navigating your browser to: <strong id="teacherControlUrl"></strong></p>
-                <button class="btn" onclick="acceptTeacherControl()">Continue</button>
-            </div>
-            
-            <div class="blocked-message" id="blockedMessage">
-                <div style="font-size: 4rem; margin-bottom: 20px;">🚫</div>
-                <h2>Website Blocked</h2>
-                <p>This website has been restricted by your teacher.</p>
-                <p id="blockedUrlText" style="font-family: monospace; margin: 10px 0; font-size: 1.1rem;"></p>
-                <button class="btn" onclick="closeBlockedMessage()" style="margin-top: 20px;">Return to Safe Browsing</button>
-            </div>
-            
-            <div class="loading-message" id="loadingMessage">
-                <div style="font-size: 3rem; margin-bottom: 20px;">⏳</div>
-                <h3>Loading Website...</h3>
-                <p>Please wait while we load the website securely.</p>
-            </div>
-
-            <div class="website-view" id="websiteView" style="display: none;">
-                <div class="website-preview">
-                    <div class="website-preview-icon" id="currentWebsiteIcon">🌐</div>
-                    <div class="website-preview-name" id="currentWebsiteName">Website</div>
-                    <div class="website-preview-url" id="currentWebsiteUrl">https://example.com</div>
-                    <div class="website-preview-status">
-                        <p>🟢 Currently Viewing</p>
-                        <p>Your teacher can see this activity</p>
-                    </div>
+            <div class="student-info">
+                <div class="student-avatar" id="studentAvatar">S</div>
+                <div class="student-details">
+                    <strong id="studentNameDisplay">Student Name</strong><br>
+                    Class: <span id="classCodeDisplay">Class Code</span>
                 </div>
             </div>
-
-            <div class="new-tab-notice" id="newTabNotice" style="display: none;">
-                <div style="font-size: 3rem; margin-bottom: 20px;">🌐</div>
-                <h3>Website Opened in New Tab</h3>
-                <p>This website doesn't allow embedding for security reasons.</p>
-                <p>It has been opened in a new browser tab for you.</p>
-                <p id="newTabUrl" style="margin: 15px 0; font-family: monospace;"></p>
-                <button class="btn" onclick="goHome()" style="margin-top: 20px;">Return to Browser Home</button>
+            <div>
+                <button class="btn btn-danger" onclick="logout()" style="padding: 8px 15px;">Exit Browser</button>
+            </div>
+        </div>
+        
+        <!-- Tab Bar -->
+        <div class="tab-bar" id="tabBar">
+            <!-- Tabs will be dynamically added here -->
+            <button class="new-tab-btn" onclick="createNewTab()" title="New Tab">+</button>
+        </div>
+        
+        <!-- Browser Controls -->
+        <div class="browser-controls">
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="goBack()" title="Back">←</button>
+                <button class="nav-btn" onclick="goForward()" title="Forward">→</button>
+                <button class="nav-btn" onclick="reloadTab()" title="Reload">↻</button>
+                <button class="nav-btn" onclick="goHome()" title="Home">🏠</button>
             </div>
             
-            <div class="home-screen" id="homeScreen">
+            <div class="url-input-container">
+                <input type="text" class="url-input" id="browserUrl" placeholder="Type a URL or search...">
+                <button class="go-button" onclick="navigateCurrentTab()">Go</button>
+            </div>
+        </div>
+        
+        <!-- Tab Content Area -->
+        <div id="tabContentArea">
+            <!-- Tab content will be dynamically added here -->
+        </div>
+        
+        <!-- Home Screen (Default Tab) -->
+        <div class="tab-content active" id="homeTab">
+            <div class="home-screen">
                 <div class="welcome-message">
                     Welcome to Class Stacks Browser!<br>
-                    <small style="font-size: 1rem; color: #666;">Type any website URL above or click on a website below.</small>
-                </div>
-
-                <div class="screen-sharing-notice">
-                    <h4>📹 Activity Monitoring Active</h4>
-                    <p>Your teacher can view your browsing activity to help with your work.</p>
-                    <p><small>Activity is updated every 2.5 seconds</small></p>
-                </div>
-
-                <div id="restrictionNotice" class="restriction-notice" style="display: none;">
-                    <h4>🔒 Restricted Mode Active</h4>
-                    <p>Your teacher has enabled website restrictions. Some sites may be blocked for educational purposes.</p>
+                    <small style="font-size: 1rem; color: #666;">Start browsing or try one of these educational sites:</small>
                 </div>
                 
-                <div class="url-examples">
-                    <h4>💡 Try these URLs:</h4>
-                    <span class="url-example" onclick="visitWebsite('google.com')">google.com</span>
-                    <span class="url-example" onclick="visitWebsite('youtube.com')">youtube.com</span>
-                    <span class="url-example" onclick="visitWebsite('wikipedia.org')">wikipedia.org</span>
-                    <span class="url-example" onclick="visitWebsite('khanacademy.org')">khanacademy.org</span>
-                    <span class="url-example" onclick="visitWebsite('github.com')">github.com</span>
-                    <span class="url-example" onclick="visitWebsite('stackoverflow.com')">stackoverflow.com</span>
-                    <span class="url-example" onclick="visitWebsite('code.org')">code.org</span>
-                    <span class="url-example" onclick="visitWebsite('duolingo.com')">duolingo.com</span>
+                <div class="website-grid">
+                    <div class="website-item" onclick="visitWebsiteInNewTab('https://www.google.com')">
+                        <div class="website-icon">🔍</div>
+                        <div>Google</div>
+                    </div>
+                    <div class="website-item" onclick="visitWebsiteInNewTab('https://www.wikipedia.org')">
+                        <div class="website-icon">🌐</div>
+                        <div>Wikipedia</div>
+                    </div>
+                    <div class="website-item" onclick="visitWebsiteInNewTab('https://www.khanacademy.org')">
+                        <div class="website-icon">📚</div>
+                        <div>Khan Academy</div>
+                    </div>
+                    <div class="website-item" onclick="visitWebsiteInNewTab('https://stackoverflow.com')">
+                        <div class="website-icon">💡</div>
+                        <div>Stack Overflow</div>
+                    </div>
+                    <div class="website-item" onclick="visitWebsiteInNewTab('https://github.com')">
+                        <div class="website-icon">💻</div>
+                        <div>GitHub</div>
+                    </div>
+                    <div class="website-item" onclick="visitWebsiteInNewTab('https://code.org')">
+                        <div class="website-icon">👨‍💻</div>
+                        <div>Code.org</div>
+                    </div>
+                    <div class="website-item" onclick="visitWebsiteInNewTab('https://www.duolingo.com')">
+                        <div class="website-icon">🦉</div>
+                        <div>Duolingo</div>
+                    </div>
+                    <div class="website-item" onclick="visitWebsiteInNewTab('https://www.coursera.org')">
+                        <div class="website-icon">🎓</div>
+                        <div>Coursera</div>
+                    </div>
                 </div>
                 
-                <div class="website-list">
-                    <div class="website-category">
-                        <h3>🌐 Educational Websites</h3>
-                        <div class="website-grid">
-                            <div class="website-item" onclick="visitWebsite('https://www.khanacademy.org')">
-                                <div class="website-icon">📚</div>
-                                <div>Khan Academy</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.wikipedia.org')">
-                                <div class="website-icon">🌐</div>
-                                <div>Wikipedia</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.google.com')">
-                                <div class="website-icon">🔍</div>
-                                <div>Google Search</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://stackoverflow.com')">
-                                <div class="website-icon">💡</div>
-                                <div>Stack Overflow</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="website-category">
-                        <h3>👨‍💻 Coding Resources</h3>
-                        <div class="website-grid">
-                            <div class="website-item" onclick="visitWebsite('https://github.com')">
-                                <div class="website-icon">💻</div>
-                                <div>GitHub</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://code.org')">
-                                <div class="website-icon">👨‍💻</div>
-                                <div>Code.org</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://scratch.mit.edu')">
-                                <div class="website-icon">🐱</div>
-                                <div>Scratch</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.w3schools.com')">
-                                <div class="website-icon">🌍</div>
-                                <div>W3Schools</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="website-category">
-                        <h3>🎓 Learning Platforms</h3>
-                        <div class="website-grid">
-                            <div class="website-item" onclick="visitWebsite('https://www.duolingo.com')">
-                                <div class="website-icon">🦉</div>
-                                <div>Duolingo</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.coursera.org')">
-                                <div class="website-icon">🎓</div>
-                                <div>Coursera</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.edx.org')">
-                                <div class="website-icon">📖</div>
-                                <div>edX</div>
-                            </div>
-                            <div class="website-item" onclick="visitWebsite('https://www.udemy.com')">
-                                <div class="website-icon">🎯</div>
-                                <div>Udemy</div>
-                            </div>
-                        </div>
-                    </div>
+                <div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 10px; max-width: 600px;">
+                    <h3>Quick Tips:</h3>
+                    <ul style="text-align: left; margin-top: 10px;">
+                        <li>Use <strong>Ctrl+T</strong> to open a new tab</li>
+                        <li>Use <strong>Ctrl+W</strong> to close the current tab</li>
+                        <li>Use <strong>Ctrl+Tab</strong> to switch between tabs</li>
+                        <li>Type URLs in the address bar and press Enter to visit websites</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Message Notification -->
-    <div class="message-notification" id="messageNotification">
-        <h4>📩 New Message from Teacher</h4>
+    
+    <!-- Bypass Panel -->
+    <div class="bypass-panel" id="bypassPanel">
+        <div class="bypass-header">
+            <div><strong>Bypass Code</strong></div>
+            <button class="bypass-toggle" onclick="toggleBypassPanel()">Hide</button>
+        </div>
+        <div>
+            <input type="text" class="bypass-input" id="bypassCodeInput" placeholder="Enter bypass code">
+            <button class="bypass-submit" onclick="submitBypassCode()">Submit</button>
+        </div>
+        <div id="bypassStatus" style="margin-top: 10px; font-size: 0.8rem;"></div>
+    </div>
+    
+    <!-- Teacher Message -->
+    <div class="teacher-message" id="teacherMessage">
+        <h4>📩 Message from Teacher</h4>
         <div class="message-content" id="messageContent"></div>
         <div class="message-from" id="messageFrom"></div>
         <button class="btn" onclick="closeMessage()" style="margin-top: 10px; padding: 8px 15px;">OK</button>
     </div>
-
+    
+    <!-- Screenshot Overlay -->
+    <div class="screenshot-overlay" id="screenshotOverlay">
+        <div class="screenshot-container">
+            <h3>📸 Screenshot Requested</h3>
+            <p>Your teacher is requesting a screenshot of your screen.</p>
+            <canvas id="screenshotCanvas" class="screenshot-canvas" width="800" height="450"></canvas>
+            <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+                <button class="btn btn-success" onclick="takeScreenshot()">Take Screenshot</button>
+                <button class="btn btn-danger" onclick="cancelScreenshot()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
     <div class="connection-status" id="connectionStatus">🔄 Connected</div>
 
     <script>
-        // Student browser JavaScript
+        // Global variables
         let currentStudent = null;
-        let lastUpdateCheck = 0;
-        let lastMessageCheck = 0;
         let studentId = null;
         let currentClassCode = '';
-        let currentUrl = '';
+        let tabs = [];
+        let activeTabIndex = 0;
         let updateInterval;
-        let activityInterval;
-
-        // Check for existing session on page load
+        let screenshotInterval;
+        
+        // Tab class
+        class Tab {
+            constructor(id, title = 'New Tab', url = '', favicon = '🌐') {
+                this.id = id;
+                this.title = title;
+                this.url = url;
+                this.favicon = favicon;
+                this.history = [];
+                this.historyIndex = -1;
+                this.canGoBack = false;
+                this.canGoForward = false;
+            }
+            
+            navigateTo(url) {
+                if (this.url) {
+                    this.history.push(this.url);
+                    this.historyIndex = this.history.length - 1;
+                }
+                this.url = url;
+                this.updateNavigationState();
+            }
+            
+            goBack() {
+                if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                    this.url = this.history[this.historyIndex];
+                    this.updateNavigationState();
+                    return true;
+                }
+                return false;
+            }
+            
+            goForward() {
+                if (this.historyIndex < this.history.length - 1) {
+                    this.historyIndex++;
+                    this.url = this.history[this.historyIndex];
+                    this.updateNavigationState();
+                    return true;
+                }
+                return false;
+            }
+            
+            updateNavigationState() {
+                this.canGoBack = this.historyIndex > 0;
+                this.canGoForward = this.historyIndex < this.history.length - 1;
+            }
+        }
+        
+        // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
+            // Check for existing session
             const savedStudent = localStorage.getItem('currentStudent');
             if (savedStudent) {
                 try {
@@ -665,12 +761,11 @@
                     studentId = currentStudent.id;
                     currentClassCode = currentStudent.classCode;
                     
-                    // Verify the class still exists in shared data
+                    // Verify the class still exists
                     const data = getSharedData();
                     if (data.students && data.students[studentId]) {
                         showStudentBrowser();
                     } else {
-                        // Session expired or invalid
                         localStorage.removeItem('currentStudent');
                         showError('Session expired. Please log in again.');
                     }
@@ -679,8 +774,33 @@
                     showError('Invalid session data. Please log in again.');
                 }
             }
+            
+            // Set up keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case 't':
+                            e.preventDefault();
+                            createNewTab();
+                            break;
+                        case 'w':
+                            e.preventDefault();
+                            closeCurrentTab();
+                            break;
+                        case 'r':
+                            e.preventDefault();
+                            reloadTab();
+                            break;
+                    }
+                }
+                
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                    toggleBypassPanel();
+                }
+            });
         });
-
+        
         // Student authentication
         document.getElementById('authForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -697,19 +817,17 @@
                 showError('Please enter a class code');
                 return;
             }
-
+            
             // Show loading state
             const submitBtn = e.target.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
             submitBtn.textContent = 'Connecting...';
             submitBtn.disabled = true;
-
-            // Check if class code exists in shared data
+            
+            // Check if class code exists
             setTimeout(() => {
                 const data = getSharedData();
-                
-                // Check if class exists in classes
-                const classExists = data.classes && data.classes[classCode];
+                const classExists = data.classSettings && data.classSettings[classCode];
                 
                 if (classExists) {
                     // Class code is valid - create student session
@@ -721,10 +839,10 @@
                         name: studentName,
                         classCode: classCode,
                         lastActive: Date.now(),
-                        currentUrl: '',
-                        currentActivity: 'Logged in to browser',
                         device: getDeviceInfo(),
-                        connected: true
+                        connected: true,
+                        tabs: [],
+                        activeTab: 0
                     };
                     
                     // Register student with teacher dashboard
@@ -734,7 +852,6 @@
                     localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
                     showStudentBrowser();
                 } else {
-                    // Class code doesn't exist
                     showError(`Class code "${classCode}" not found. Please check with your teacher.`);
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
@@ -745,7 +862,6 @@
         // Register student with teacher dashboard
         function registerStudent() {
             const data = getSharedData();
-            if (!data.students) data.students = {};
             data.students[currentStudent.id] = currentStudent;
             
             // Ensure the class exists in classes object
@@ -769,7 +885,808 @@
             saveSharedData(data);
         }
         
-        // Get shared data from localStorage
+        // Show student browser
+        function showStudentBrowser() {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('studentBrowser').style.display = 'flex';
+            document.getElementById('studentNameDisplay').textContent = currentStudent.name;
+            document.getElementById('studentAvatar').textContent = currentStudent.name.charAt(0).toUpperCase();
+            document.getElementById('classCodeDisplay').textContent = currentClassCode;
+            
+            // Initialize tabs
+            initializeTabs();
+            
+            // Show bypass panel
+            document.getElementById('bypassPanel').style.display = 'block';
+            
+            // Start activity reporting
+            startActivityReporting();
+            
+            // Start monitoring for teacher commands
+            startMonitoring();
+            
+            // Start automatic screenshots
+            startAutomaticScreenshots();
+        }
+        
+        // Initialize tabs
+        function initializeTabs() {
+            tabs = [];
+            
+            // Create home tab
+            const homeTab = new Tab('home', 'Home', '');
+            tabs.push(homeTab);
+            activeTabIndex = 0;
+            
+            // Update tab display
+            updateTabDisplay();
+            updateNavigationButtons();
+        }
+        
+        // Create a new tab
+        function createNewTab(url = '', title = 'New Tab') {
+            const tabId = 'tab_' + Date.now();
+            const newTab = new Tab(tabId, title, url);
+            tabs.push(newTab);
+            activeTabIndex = tabs.length - 1;
+            
+            // Create tab element
+            updateTabDisplay();
+            
+            // Create tab content
+            createTabContent(tabId);
+            
+            // If URL provided, navigate to it
+            if (url) {
+                navigateToUrl(url, activeTabIndex);
+            }
+            
+            // Update student data
+            updateStudentTabs();
+            
+            return newTab;
+        }
+        
+        // Close current tab
+        function closeCurrentTab() {
+            if (tabs.length <= 1) {
+                // Don't close the last tab
+                return;
+            }
+            
+            // Remove tab from array
+            tabs.splice(activeTabIndex, 1);
+            
+            // Adjust active tab index if needed
+            if (activeTabIndex >= tabs.length) {
+                activeTabIndex = tabs.length - 1;
+            }
+            
+            // Update display
+            updateTabDisplay();
+            updateStudentTabs();
+        }
+        
+        // Close specific tab
+        function closeTab(tabIndex) {
+            if (tabs.length <= 1) {
+                return;
+            }
+            
+            tabs.splice(tabIndex, 1);
+            
+            if (activeTabIndex >= tabIndex) {
+                activeTabIndex = Math.max(0, activeTabIndex - 1);
+            }
+            
+            updateTabDisplay();
+            updateStudentTabs();
+        }
+        
+        // Switch to a tab
+        function switchToTab(tabIndex) {
+            if (tabIndex >= 0 && tabIndex < tabs.length) {
+                activeTabIndex = tabIndex;
+                updateTabDisplay();
+                updateNavigationButtons();
+                updateUrlBar();
+            }
+        }
+        
+        // Update tab display
+        function updateTabDisplay() {
+            const tabBar = document.getElementById('tabBar');
+            const newTabBtn = tabBar.querySelector('.new-tab-btn');
+            
+            // Clear existing tabs (except new tab button)
+            tabBar.innerHTML = '';
+            
+            // Add all tabs
+            tabs.forEach((tab, index) => {
+                const tabElement = document.createElement('div');
+                tabElement.className = `tab ${index === activeTabIndex ? 'active' : ''}`;
+                tabElement.dataset.tabIndex = index;
+                
+                tabElement.innerHTML = `
+                    <div class="tab-favicon">${tab.favicon}</div>
+                    <div class="tab-title">${tab.title}</div>
+                    <div class="tab-close" onclick="event.stopPropagation(); closeTab(${index})">×</div>
+                `;
+                
+                tabElement.addEventListener('click', () => switchToTab(index));
+                
+                tabBar.appendChild(tabElement);
+            });
+            
+            // Add new tab button
+            tabBar.appendChild(newTabBtn);
+            
+            // Update tab content visibility
+            updateTabContentVisibility();
+        }
+        
+        // Update tab content visibility
+        function updateTabContentVisibility() {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+                content.classList.remove('active');
+            });
+            
+            // Show active tab content
+            const activeTab = tabs[activeTabIndex];
+            let tabContent = document.getElementById(activeTab.id);
+            
+            if (!tabContent) {
+                createTabContent(activeTab.id);
+                tabContent = document.getElementById(activeTab.id);
+            }
+            
+            if (tabContent) {
+                tabContent.style.display = 'flex';
+                tabContent.classList.add('active');
+            }
+        }
+        
+        // Create tab content
+        function createTabContent(tabId) {
+            const tabContentArea = document.getElementById('tabContentArea');
+            
+            const tabContent = document.createElement('div');
+            tabContent.className = 'tab-content';
+            tabContent.id = tabId;
+            
+            // Add home screen for new tabs
+            if (tabId !== 'home') {
+                const homeScreen = document.createElement('div');
+                homeScreen.className = 'home-screen';
+                homeScreen.innerHTML = `
+                    <div class="welcome-message">
+                        New Tab<br>
+                        <small style="font-size: 1rem; color: #666;">Type a URL or search above</small>
+                    </div>
+                `;
+                tabContent.appendChild(homeScreen);
+            }
+            
+            tabContentArea.appendChild(tabContent);
+        }
+        
+        // Update navigation buttons state
+        function updateNavigationButtons() {
+            const activeTab = tabs[activeTabIndex];
+            if (activeTab) {
+                document.querySelector('.nav-btn:nth-child(1)').disabled = !activeTab.canGoBack;
+                document.querySelector('.nav-btn:nth-child(2)').disabled = !activeTab.canGoForward;
+            }
+        }
+        
+        // Update URL bar with current tab's URL
+        function updateUrlBar() {
+            const activeTab = tabs[activeTabIndex];
+            if (activeTab) {
+                document.getElementById('browserUrl').value = activeTab.url;
+            }
+        }
+        
+        // Navigate current tab
+        function navigateCurrentTab() {
+            const urlInput = document.getElementById('browserUrl');
+            const url = urlInput.value.trim();
+            
+            if (url) {
+                navigateToUrl(url, activeTabIndex);
+            }
+        }
+        
+        // Navigate to URL in specific tab
+        function navigateToUrl(url, tabIndex) {
+            // Check if browser is locked
+            const data = getSharedData();
+            const classSettings = data.classSettings && data.classSettings[currentClassCode] ? 
+                data.classSettings[currentClassCode] : { allowBrowsing: true };
+            const studentLocked = data.studentLocks && data.studentLocks[studentId];
+            
+            if (classSettings.allowBrowsing === false || studentLocked) {
+                showLockedMessage(tabIndex);
+                return;
+            }
+            
+            let fullUrl = url;
+            if (!url.startsWith('http')) {
+                fullUrl = 'https://' + url;
+            }
+            
+            // Extract domain for blocking check
+            const domain = extractDomain(fullUrl);
+            
+            // Check if website is blocked
+            const blockingEnabled = classSettings.blockingEnabled !== false;
+            if (blockingEnabled && isUrlBlocked(domain)) {
+                showBlockedMessage(domain, tabIndex);
+                return;
+            }
+            
+            const tab = tabs[tabIndex];
+            tab.navigateTo(fullUrl);
+            tab.title = getWebsiteName(domain);
+            tab.favicon = getWebsiteIcon(domain);
+            
+            // Show loading message
+            showLoadingMessage(tabIndex);
+            
+            // Update tab display
+            updateTabDisplay();
+            updateNavigationButtons();
+            updateUrlBar();
+            
+            // Log the website visit
+            const sharedData = getSharedData();
+            if (!sharedData.activityLogs) sharedData.activityLogs = {};
+            if (!sharedData.activityLogs[studentId]) sharedData.activityLogs[studentId] = [];
+            sharedData.activityLogs[studentId].push({
+                action: `Visited ${getWebsiteName(domain)} (${fullUrl})`,
+                timestamp: Date.now()
+            });
+            
+            // Update student data
+            updateStudentTabs();
+            saveSharedData(sharedData);
+            
+            // Simulate loading (in a real browser, this would be an iframe)
+            setTimeout(() => {
+                // Hide loading message
+                hideLoadingMessage(tabIndex);
+                
+                // Show website content (simulated)
+                showWebsiteContent(fullUrl, tabIndex);
+            }, 1500);
+        }
+        
+        // Show website content (simulated)
+        function showWebsiteContent(url, tabIndex) {
+            const tab = tabs[tabIndex];
+            const tabContent = document.getElementById(tab.id);
+            
+            // Clear existing content
+            tabContent.innerHTML = '';
+            
+            // Create website preview
+            const websitePreview = document.createElement('div');
+            websitePreview.className = 'home-screen';
+            websitePreview.style.background = '#f8f9fa';
+            
+            const domain = extractDomain(url);
+            const websiteName = getWebsiteName(domain);
+            const websiteIcon = getWebsiteIcon(domain);
+            const websiteColor = getWebsiteColor(domain);
+            
+            websitePreview.innerHTML = `
+                <div style="background: ${websiteColor}; color: white; padding: 30px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">${websiteIcon}</div>
+                    <h2 style="margin-bottom: 10px;">${websiteName}</h2>
+                    <div style="font-family: monospace; font-size: 0.9rem;">${url}</div>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 10px; max-width: 600px; text-align: left;">
+                    <h3>Welcome to ${websiteName}</h3>
+                    <p>This is a simulated view of ${websiteName}. In a real implementation, this would be the actual website content loaded in an iframe.</p>
+                    <p><strong>Note:</strong> For security reasons, actual website embedding is limited in this demo. In a production environment, proper iframe security would be implemented.</p>
+                </div>
+                <div style="margin-top: 20px; color: #666;">
+                    <p>🟢 Currently viewing • Teacher can see this activity</p>
+                </div>
+            `;
+            
+            tabContent.appendChild(websitePreview);
+        }
+        
+        // Show loading message
+        function showLoadingMessage(tabIndex) {
+            const tab = tabs[tabIndex];
+            const tabContent = document.getElementById(tab.id);
+            
+            // Clear existing content
+            tabContent.innerHTML = '';
+            
+            const loadingMessage = document.createElement('div');
+            loadingMessage.className = 'loading-message';
+            loadingMessage.innerHTML = `
+                <div class="loading-icon">⏳</div>
+                <h3>Loading Website...</h3>
+                <p>Please wait while we load the website securely.</p>
+            `;
+            
+            tabContent.appendChild(loadingMessage);
+        }
+        
+        // Hide loading message
+        function hideLoadingMessage(tabIndex) {
+            const tab = tabs[tabIndex];
+            const tabContent = document.getElementById(tab.id);
+            const loadingMessage = tabContent.querySelector('.loading-message');
+            
+            if (loadingMessage) {
+                loadingMessage.style.display = 'none';
+            }
+        }
+        
+        // Show blocked message
+        function showBlockedMessage(url, tabIndex) {
+            const tab = tabs[tabIndex];
+            const tabContent = document.getElementById(tab.id);
+            
+            // Clear existing content
+            tabContent.innerHTML = '';
+            
+            const blockedMessage = document.createElement('div');
+            blockedMessage.className = 'blocked-message';
+            blockedMessage.style.display = 'flex';
+            blockedMessage.innerHTML = `
+                <div class="message-icon">🚫</div>
+                <h2>Website Blocked</h2>
+                <p>This website has been restricted by your teacher.</p>
+                <p style="font-family: monospace; margin: 10px 0; font-size: 1.1rem;">${url}</p>
+                <button class="btn" onclick="goHomeTab(${tabIndex})" style="margin-top: 20px;">Return to Safe Browsing</button>
+            `;
+            
+            tabContent.appendChild(blockedMessage);
+            
+            // Update student data
+            updateStudentTabs();
+        }
+        
+        // Show locked message
+        function showLockedMessage(tabIndex) {
+            const tab = tabs[tabIndex];
+            const tabContent = document.getElementById(tab.id);
+            
+            // Clear existing content
+            tabContent.innerHTML = '';
+            
+            const lockedMessage = document.createElement('div');
+            lockedMessage.className = 'locked-message';
+            lockedMessage.style.display = 'flex';
+            lockedMessage.innerHTML = `
+                <div class="message-icon">🔒</div>
+                <h2>Browser Locked</h2>
+                <p>Your teacher has locked your browser.</p>
+                <p>You cannot access any websites at this time.</p>
+                <button class="btn" onclick="goHomeTab(${tabIndex})" style="margin-top: 20px;">Return to Home</button>
+            `;
+            
+            tabContent.appendChild(lockedMessage);
+            
+            // Update student data
+            updateStudentTabs();
+        }
+        
+        // Go to home in specific tab
+        function goHomeTab(tabIndex) {
+            const tab = tabs[tabIndex];
+            const tabContent = document.getElementById(tab.id);
+            
+            // Clear existing content
+            tabContent.innerHTML = '';
+            
+            // Add home screen
+            const homeScreen = document.createElement('div');
+            homeScreen.className = 'home-screen';
+            homeScreen.innerHTML = `
+                <div class="welcome-message">
+                    ${tabIndex === 0 ? 'Welcome to Class Stacks Browser!' : 'New Tab'}<br>
+                    <small style="font-size: 1rem; color: #666;">Start browsing or try one of the educational sites</small>
+                </div>
+            `;
+            
+            tabContent.appendChild(homeScreen);
+            
+            // Update tab
+            tab.url = '';
+            tab.title = tabIndex === 0 ? 'Home' : 'New Tab';
+            tab.favicon = '🌐';
+            
+            updateTabDisplay();
+            updateUrlBar();
+            updateStudentTabs();
+        }
+        
+        // Go to home in current tab
+        function goHome() {
+            goHomeTab(activeTabIndex);
+        }
+        
+        // Go back in current tab
+        function goBack() {
+            const activeTab = tabs[activeTabIndex];
+            if (activeTab && activeTab.goBack()) {
+                navigateToUrl(activeTab.url, activeTabIndex);
+            }
+        }
+        
+        // Go forward in current tab
+        function goForward() {
+            const activeTab = tabs[activeTabIndex];
+            if (activeTab && activeTab.goForward()) {
+                navigateToUrl(activeTab.url, activeTabIndex);
+            }
+        }
+        
+        // Reload current tab
+        function reloadTab() {
+            const activeTab = tabs[activeTabIndex];
+            if (activeTab && activeTab.url) {
+                navigateToUrl(activeTab.url, activeTabIndex);
+            }
+        }
+        
+        // Visit website in new tab
+        function visitWebsiteInNewTab(url) {
+            createNewTab(url);
+        }
+        
+        // Update student tabs data for teacher monitoring
+        function updateStudentTabs() {
+            if (!currentStudent) return;
+            
+            currentStudent.tabs = tabs.map(tab => ({
+                id: tab.id,
+                title: tab.title,
+                url: tab.url,
+                favicon: tab.favicon
+            }));
+            
+            currentStudent.activeTab = activeTabIndex;
+            currentStudent.lastActive = Date.now();
+            
+            // Update in shared data
+            const data = getSharedData();
+            data.students[currentStudent.id] = currentStudent;
+            saveSharedData(data);
+            
+            localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
+        }
+        
+        // Start activity reporting
+        function startActivityReporting() {
+            setInterval(() => {
+                reportStudentActivity();
+            }, 5000);
+        }
+        
+        function startAutomaticScreenshots() {
+            screenshotInterval = setInterval(() => {
+                takeAutomaticScreenshot();
+            }, 2500);
+        }
+        
+        function reportStudentActivity() {
+            if (!currentStudent) return;
+            
+            currentStudent.lastActive = Date.now();
+            updateStudentTabs();
+            
+            // Update connection status
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.style.background = 'var(--success)';
+            statusElement.textContent = '🔄 Connected';
+        }
+        
+        function startMonitoring() {
+            setInterval(() => {
+                checkForMessages();
+                checkForTeacherControl();
+                checkForScreenshotRequests();
+                reportStudentActivity();
+            }, 2000);
+        }
+        
+        // Bypass code functionality
+        function toggleBypassPanel() {
+            const panel = document.getElementById('bypassPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function submitBypassCode() {
+            const codeInput = document.getElementById('bypassCodeInput');
+            const code = codeInput.value.trim();
+            const statusElement = document.getElementById('bypassStatus');
+            
+            if (!code) {
+                statusElement.textContent = 'Please enter a code';
+                statusElement.style.color = 'var(--danger)';
+                return;
+            }
+            
+            const data = getSharedData();
+            const bypassCode = data.bypassCodes && data.bypassCodes[code];
+            
+            if (bypassCode && !isBypassCodeExpired(bypassCode) && !isBypassCodeUsedUp(bypassCode)) {
+                // Valid bypass code
+                bypassCode.usageCount = (bypassCode.usageCount || 0) + 1;
+                currentStudent.bypassActive = true;
+                currentStudent.bypassExpiry = Date.now() + (30 * 60 * 1000); // 30 minutes
+                
+                statusElement.textContent = 'Bypass activated for 30 minutes!';
+                statusElement.style.color = 'var(--success)';
+                
+                // Update student data
+                updateStudentTabs();
+                saveSharedData(data);
+                
+                // Clear input
+                codeInput.value = '';
+                
+                // Auto-hide after success
+                setTimeout(() => {
+                    document.getElementById('bypassPanel').style.display = 'none';
+                }, 3000);
+            } else {
+                statusElement.textContent = 'Invalid or expired bypass code';
+                statusElement.style.color = 'var(--danger)';
+            }
+        }
+        
+        function isBypassCodeExpired(bypassCode) {
+            return Date.now() > bypassCode.expiry;
+        }
+        
+        function isBypassCodeUsedUp(bypassCode) {
+            return bypassCode.usageCount >= bypassCode.maxUsage;
+        }
+        
+        // Check for teacher messages
+        function checkForMessages() {
+            if (!studentId) return;
+            
+            const data = getSharedData();
+            const messages = data.messages || {};
+            const studentMessages = messages[studentId];
+            
+            if (studentMessages && studentMessages.length > 0) {
+                const latestMessage = studentMessages[studentMessages.length - 1];
+                
+                // Only show if it's a new message
+                if (!currentStudent.lastMessage || currentStudent.lastMessage.timestamp !== latestMessage.timestamp) {
+                    currentStudent.lastMessage = latestMessage;
+                    showMessage(latestMessage.text, latestMessage.from);
+                }
+            }
+        }
+        
+        function showMessage(message, from) {
+            document.getElementById('messageContent').textContent = message;
+            document.getElementById('messageFrom').textContent = `From: ${from}`;
+            document.getElementById('teacherMessage').style.display = 'block';
+        }
+        
+        function closeMessage() {
+            document.getElementById('teacherMessage').style.display = 'none';
+        }
+        
+        // Check for teacher control commands
+        function checkForTeacherControl() {
+            if (!studentId) return;
+            
+            const data = getSharedData();
+            const teacherControl = data.teacherControl || {};
+            const controlCommand = teacherControl[studentId];
+            
+            if (controlCommand && controlCommand.action === 'closeTab') {
+                // Close current tab and go home
+                goHome();
+                
+                // Clear the control command
+                delete teacherControl[studentId];
+                data.teacherControl = teacherControl;
+                saveSharedData(data);
+            }
+        }
+        
+        // Check for screenshot requests
+        function checkForScreenshotRequests() {
+            if (!studentId) return;
+            
+            const data = getSharedData();
+            const screenshots = data.screenshots || {};
+            const screenshotRequest = screenshots[studentId];
+            
+            if (screenshotRequest && screenshotRequest.requested) {
+                // Show screenshot overlay
+                document.getElementById('screenshotOverlay').style.display = 'flex';
+                
+                // Mark request as handled
+                screenshotRequest.requested = false;
+                saveSharedData(data);
+            }
+        }
+        
+        // Take automatic screenshot
+        function takeAutomaticScreenshot() {
+            if (!studentId) return;
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            // Set canvas size to match browser content
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Draw browser representation
+            drawBrowserRepresentation(context, canvas.width, canvas.height);
+            
+            // Convert to data URL and save
+            const imageData = canvas.toDataURL('image/png');
+            
+            const data = getSharedData();
+            if (!data.screenshots) data.screenshots = {};
+            data.screenshots[studentId] = {
+                imageData: imageData,
+                timestamp: Date.now(),
+                requested: false
+            };
+            
+            saveSharedData(data);
+        }
+        
+        // Take manual screenshot (when requested by teacher)
+        function takeScreenshot() {
+            const canvas = document.getElementById('screenshotCanvas');
+            const context = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = 800;
+            canvas.height = 450;
+            
+            // Draw browser representation
+            drawBrowserRepresentation(context, canvas.width, canvas.height);
+            
+            // Convert to data URL and save
+            const imageData = canvas.toDataURL('image/png');
+            
+            const data = getSharedData();
+            if (!data.screenshots) data.screenshots = {};
+            data.screenshots[studentId] = {
+                imageData: imageData,
+                timestamp: Date.now(),
+                requested: false
+            };
+            
+            saveSharedData(data);
+            
+            // Hide overlay
+            document.getElementById('screenshotOverlay').style.display = 'none';
+        }
+        
+        function cancelScreenshot() {
+            document.getElementById('screenshotOverlay').style.display = 'none';
+        }
+        
+        // Draw browser representation for screenshots
+        function drawBrowserRepresentation(ctx, width, height) {
+            const activeTab = tabs[activeTabIndex];
+            
+            // Draw browser background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw browser header
+            ctx.fillStyle = '#4361ee';
+            ctx.fillRect(0, 0, width, 70);
+            
+            // Draw student info
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText(`${currentStudent.name} - ${currentClassCode}`, 20, 40);
+            
+            // Draw tab bar
+            ctx.fillStyle = '#f1f3f4';
+            ctx.fillRect(0, 70, width, 50);
+            
+            // Draw active tab
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(10, 75, 200, 40);
+            ctx.fillStyle = '#4361ee';
+            ctx.fillRect(10, 115, 200, 5);
+            
+            // Draw tab title
+            ctx.fillStyle = '#000000';
+            ctx.font = '14px Arial';
+            ctx.fillText(activeTab.title || 'New Tab', 40, 100);
+            
+            // Draw URL bar
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 120, width, 50);
+            ctx.fillStyle = '#e1e5ee';
+            ctx.fillRect(20, 135, width - 40, 30);
+            
+            // Draw URL
+            ctx.fillStyle = '#000000';
+            ctx.font = '14px Arial';
+            ctx.fillText(activeTab.url || 'Class Stacks Browser', 30, 155);
+            
+            // Draw content area
+            if (activeTab.url) {
+                // Draw website preview
+                const domain = extractDomain(activeTab.url);
+                const websiteName = getWebsiteName(domain);
+                const websiteColor = getWebsiteColor(domain);
+                
+                ctx.fillStyle = websiteColor;
+                ctx.fillRect(0, 170, width, 120);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 20px Arial';
+                ctx.fillText(websiteName, 40, 210);
+                
+                ctx.font = '14px Arial';
+                ctx.fillText(activeTab.url, 40, 235);
+                
+                ctx.fillStyle = '#f8f9fa';
+                ctx.fillRect(0, 290, width, height - 290);
+                
+                ctx.fillStyle = '#666666';
+                ctx.font = '14px Arial';
+                ctx.fillText('Website content would appear here', 40, 320);
+            } else {
+                // Draw home screen
+                ctx.fillStyle = '#f8f9fa';
+                ctx.fillRect(0, 170, width, height - 170);
+                
+                ctx.fillStyle = '#4361ee';
+                ctx.font = 'bold 24px Arial';
+                ctx.fillText('Class Stacks Browser', width/2 - 100, 220);
+                
+                ctx.fillStyle = '#666666';
+                ctx.font = '16px Arial';
+                ctx.fillText('Educational Browser - Teacher Monitored', width/2 - 150, 250);
+                
+                // Draw quick access icons
+                const websites = ['Google', 'Wikipedia', 'Khan Academy', 'GitHub'];
+                for (let i = 0; i < websites.length; i++) {
+                    const x = 40 + (i * 120);
+                    const y = 300;
+                    
+                    ctx.fillStyle = '#e9ecef';
+                    ctx.fillRect(x, y, 80, 80);
+                    
+                    ctx.fillStyle = '#000000';
+                    ctx.font = '12px Arial';
+                    ctx.fillText(websites[i], x, y + 100);
+                }
+            }
+            
+            // Draw student info overlay
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(width - 300, height - 60, 300, 60);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '12px Arial';
+            ctx.fillText(`Student: ${currentStudent.name}`, width - 280, height - 40);
+            ctx.fillText(`Class: ${currentStudent.classCode}`, width - 280, height - 20);
+            ctx.fillText(`Time: ${new Date().toLocaleTimeString()}`, width - 140, height - 20);
+        }
+        
+        // Utility functions
         function getSharedData() {
             const defaultData = {
                 students: {},
@@ -783,6 +1700,8 @@
                 teacherControl: {},
                 messages: {},
                 studentLocks: {},
+                screenshots: {},
+                bypassCodes: {},
                 activityLogs: {},
                 lastUpdated: Date.now()
             };
@@ -791,18 +1710,15 @@
                 const stored = localStorage.getItem('classStacksData');
                 if (stored) {
                     const parsed = JSON.parse(stored);
-                    // Merge with default data to ensure all properties exist
                     return {...defaultData, ...parsed};
                 }
             } catch (e) {
                 console.error('Error parsing stored data:', e);
             }
             
-            // Return default data if nothing exists or error occurs
             return defaultData;
         }
         
-        // Save shared data to localStorage
         function saveSharedData(data) {
             try {
                 data.lastUpdated = Date.now();
@@ -814,189 +1730,6 @@
             }
         }
         
-        function showError(message) {
-            const errorElement = document.getElementById('errorMessage');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-            setTimeout(() => errorElement.style.display = 'none', 5000);
-        }
-        
-        function showStudentBrowser() {
-            document.getElementById('authContainer').style.display = 'none';
-            document.getElementById('studentBrowser').style.display = 'block';
-            document.getElementById('studentNameDisplay').textContent = currentStudent.name;
-            document.getElementById('classCodeDisplay').textContent = currentStudent.classCode;
-            
-            // Check restriction status
-            checkRestrictionStatus();
-            
-            // Start activity reporting
-            startActivityReporting();
-            
-            // Start monitoring for teacher commands
-            startMonitoring();
-        }
-        
-        function startActivityReporting() {
-            // Report activity every 2.5 seconds
-            activityInterval = setInterval(() => {
-                reportStudentActivity();
-            }, 2500);
-        }
-        
-        function reportStudentActivity() {
-            if (!currentStudent) return;
-            
-            currentStudent.lastActive = Date.now();
-            currentStudent.currentUrl = currentUrl;
-            
-            // Update in shared data
-            const data = getSharedData();
-            if (!data.students) data.students = {};
-            data.students[currentStudent.id] = currentStudent;
-            const success = saveSharedData(data);
-            
-            // Update connection status
-            const statusElement = document.getElementById('connectionStatus');
-            if (success) {
-                statusElement.style.background = 'var(--success)';
-                statusElement.textContent = '🔄 Connected';
-            } else {
-                statusElement.style.background = 'var(--warning)';
-                statusElement.textContent = '⚠️ Connection Issues';
-            }
-            
-            localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
-        }
-        
-        function startMonitoring() {
-            updateInterval = setInterval(() => {
-                checkRestrictionStatus();
-                checkForMessages();
-                checkForTeacherControl();
-                reportStudentActivity();
-                
-                // Check for teacher updates
-                const data = getSharedData();
-                if (data.lastUpdated && data.lastUpdated > lastUpdateCheck) {
-                    lastUpdateCheck = data.lastUpdated;
-                    checkRestrictionStatus();
-                    checkForTeacherControl();
-                }
-            }, 2000);
-        }
-        
-        function visitWebsite(url) {
-            document.getElementById('browserUrl').value = url;
-            navigateToUrl();
-        }
-        
-        function navigateToUrl() {
-            // Check if browser is locked
-            const data = getSharedData();
-            const classSettings = data.classSettings && data.classSettings[currentClassCode] ? data.classSettings[currentClassCode] : { allowBrowsing: true };
-            const studentLocked = data.studentLocks && data.studentLocks[studentId];
-            
-            if (classSettings.allowBrowsing === false || studentLocked) {
-                showLockedMessage();
-                return;
-            }
-            
-            const urlInput = document.getElementById('browserUrl');
-            let url = urlInput.value.trim();
-            
-            if (!url) return;
-
-            // Add protocol if missing
-            let fullUrl = url;
-            if (!url.startsWith('http')) {
-                fullUrl = 'https://' + url;
-            }
-
-            // Extract domain for blocking check
-            const domain = extractDomain(fullUrl);
-            
-            // Check if website is blocked (always check if blocking is enabled for class)
-            const blockingEnabled = classSettings.blockingEnabled !== false; // Default to true
-            if (blockingEnabled && isUrlBlocked(domain)) {
-                showBlockedMessage(domain);
-                return;
-            }
-            
-            // Show loading message
-            document.getElementById('loadingMessage').style.display = 'block';
-            document.getElementById('homeScreen').style.display = 'none';
-            document.getElementById('blockedMessage').style.display = 'none';
-            document.getElementById('lockedMessage').style.display = 'none';
-            document.getElementById('websiteView').style.display = 'none';
-            document.getElementById('teacherControlNotice').style.display = 'none';
-            document.getElementById('newTabNotice').style.display = 'none';
-            
-            // Log the website visit
-            const sharedData = getSharedData();
-            if (!sharedData.activityLogs) sharedData.activityLogs = {};
-            if (!sharedData.activityLogs[studentId]) sharedData.activityLogs[studentId] = [];
-            sharedData.activityLogs[studentId].push({
-                action: `Visited ${getWebsiteName(domain)} (${fullUrl})`,
-                timestamp: Date.now()
-            });
-            saveSharedData(sharedData);
-            
-            // Update current activity
-            currentStudent.currentActivity = `Browsing: ${getWebsiteName(domain)}`;
-            currentStudent.currentUrl = fullUrl;
-            
-            // Check if website allows embedding (common sites that block embedding)
-            const sitesThatBlockEmbedding = [
-                'google.com', 'youtube.com', 'facebook.com', 'instagram.com',
-                'twitter.com', 'linkedin.com', 'netflix.com', 'spotify.com'
-            ];
-            
-            const blocksEmbedding = sitesThatBlockEmbedding.some(site => 
-                domain.includes(site)
-            );
-            
-            if (blocksEmbedding) {
-                // Open in new tab and show notice
-                setTimeout(() => {
-                    document.getElementById('loadingMessage').style.display = 'none';
-                    document.getElementById('newTabNotice').style.display = 'block';
-                    document.getElementById('newTabUrl').textContent = fullUrl;
-                    
-                    // Open website in new tab
-                    window.open(fullUrl, '_blank');
-                }, 1000);
-            } else {
-                // Show website preview (simulated)
-                setTimeout(() => {
-                    document.getElementById('loadingMessage').style.display = 'none';
-                    document.getElementById('websiteView').style.display = 'flex';
-                    
-                    const domainName = extractDomain(fullUrl);
-                    document.getElementById('currentWebsiteUrl').textContent = fullUrl;
-                    document.getElementById('currentWebsiteName').textContent = getWebsiteName(domainName);
-                    document.getElementById('currentWebsiteIcon').textContent = getWebsiteIcon(domainName);
-                    
-                    // Update student activity
-                    currentStudent.currentUrl = fullUrl;
-                    updateStudentInSharedData();
-                }, 1500);
-            }
-        }
-
-        function showLockedMessage() {
-            document.getElementById('lockedMessage').style.display = 'flex';
-            document.getElementById('homeScreen').style.display = 'none';
-            document.getElementById('blockedMessage').style.display = 'none';
-            document.getElementById('websiteView').style.display = 'none';
-            document.getElementById('newTabNotice').style.display = 'none';
-            
-            currentUrl = '';
-            currentStudent.currentUrl = '';
-            currentStudent.currentActivity = 'Browser locked by teacher';
-            updateStudentInSharedData();
-        }
-
         function extractDomain(url) {
             try {
                 const domain = new URL(url).hostname;
@@ -1011,58 +1744,78 @@
             const data = getSharedData();
             const blockedSites = data.blockedSites || [];
             
-            // Check if domain contains any blocked site
             return blockedSites.some(site => {
-                // Check for exact domain match or partial match
                 return domain.toLowerCase().includes(site.toLowerCase()) || 
                        site.toLowerCase().includes(domain.toLowerCase());
             });
         }
         
-        function showBlockedMessage(url) {
-            document.getElementById('blockedMessage').style.display = 'flex';
-            document.getElementById('homeScreen').style.display = 'none';
-            document.getElementById('lockedMessage').style.display = 'none';
-            document.getElementById('websiteView').style.display = 'none';
-            document.getElementById('newTabNotice').style.display = 'none';
-            document.getElementById('blockedUrlText').textContent = url;
-            
-            currentUrl = 'BLOCKED: ' + url;
-            currentStudent.currentUrl = currentUrl;
-            currentStudent.currentActivity = 'Attempted to visit blocked site';
-            updateStudentInSharedData();
+        function getWebsiteName(domain) {
+            const names = {
+                'google.com': 'Google',
+                'youtube.com': 'YouTube',
+                'wikipedia.org': 'Wikipedia',
+                'khanacademy.org': 'Khan Academy',
+                'github.com': 'GitHub',
+                'stackoverflow.com': 'Stack Overflow',
+                'code.org': 'Code.org',
+                'duolingo.com': 'Duolingo',
+                'coursera.org': 'Coursera'
+            };
+            return names[domain] || domain;
         }
         
-        function closeBlockedMessage() {
-            document.getElementById('blockedMessage').style.display = 'none';
-            document.getElementById('homeScreen').style.display = 'block';
-            document.getElementById('browserUrl').value = '';
-            
-            currentUrl = '';
-            currentStudent.currentUrl = '';
-            currentStudent.currentActivity = 'Browsing home screen';
-            updateStudentInSharedData();
+        function getWebsiteIcon(domain) {
+            const icons = {
+                'google.com': '🔍',
+                'youtube.com': '📺',
+                'wikipedia.org': '📚',
+                'khanacademy.org': '🎓',
+                'github.com': '💻',
+                'stackoverflow.com': '💡',
+                'code.org': '👨‍💻',
+                'duolingo.com': '🦉',
+                'coursera.org': '🎓'
+            };
+            return icons[domain] || '🌐';
         }
         
-        function goHome() {
-            document.getElementById('websiteView').style.display = 'none';
-            document.getElementById('blockedMessage').style.display = 'none';
-            document.getElementById('lockedMessage').style.display = 'none';
-            document.getElementById('loadingMessage').style.display = 'none';
-            document.getElementById('teacherControlNotice').style.display = 'none';
-            document.getElementById('newTabNotice').style.display = 'none';
-            document.getElementById('homeScreen').style.display = 'block';
-            document.getElementById('browserUrl').value = '';
-            
-            currentUrl = '';
-            currentStudent.currentUrl = '';
-            currentStudent.currentActivity = 'Browsing home screen';
-            updateStudentInSharedData();
+        function getWebsiteColor(domain) {
+            const colors = {
+                'google.com': '#4285f4',
+                'youtube.com': '#ff0000',
+                'wikipedia.org': '#000000',
+                'khanacademy.org': '#14bf96',
+                'github.com': '#24292e',
+                'stackoverflow.com': '#f48024',
+                'code.org': '#0fbd8c',
+                'duolingo.com': '#58cc02',
+                'coursera.org': '#2a73cc'
+            };
+            return colors[domain] || '#4361ee';
+        }
+        
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            if (/Mobile|Android|iPhone|iPad|iPod/.test(ua)) {
+                return 'Mobile';
+            } else if (/Tablet|iPad/.test(ua)) {
+                return 'Tablet';
+            } else {
+                return 'Desktop';
+            }
+        }
+        
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            setTimeout(() => errorElement.style.display = 'none', 5000);
         }
         
         function logout() {
             if (currentStudent) {
-                // Mark student as inactive in shared data
+                // Mark student as inactive
                 const data = getSharedData();
                 if (data.students[currentStudent.id]) {
                     data.students[currentStudent.id].active = false;
@@ -1078,12 +1831,12 @@
                     saveSharedData(data);
                 }
                 
-                // Stop monitoring and activity reporting
+                // Stop monitoring and screenshots
                 if (updateInterval) {
                     clearInterval(updateInterval);
                 }
-                if (activityInterval) {
-                    clearInterval(activityInterval);
+                if (screenshotInterval) {
+                    clearInterval(screenshotInterval);
                 }
             }
             
@@ -1094,207 +1847,9 @@
             currentStudent = null;
             studentId = null;
             currentClassCode = '';
-            currentUrl = '';
+            tabs = [];
+            activeTabIndex = 0;
         }
-        
-        // Handle Enter key in URL input
-        document.getElementById('browserUrl').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                navigateToUrl();
-            }
-        });
-
-        // Check for restriction updates
-        function checkRestrictionStatus() {
-            const data = getSharedData();
-            const classSettings = data.classSettings && data.classSettings[currentClassCode] ? data.classSettings[currentClassCode] : { allowBrowsing: true, blockingEnabled: true };
-            const studentLocked = data.studentLocks && data.studentLocks[studentId];
-            
-            // Show/hide restriction notice
-            const notice = document.getElementById('restrictionNotice');
-            if (classSettings.blockingEnabled) {
-                notice.style.display = 'block';
-            } else {
-                notice.style.display = 'none';
-            }
-            
-            // Show locked message if browser is locked
-            if (classSettings.allowBrowsing === false || studentLocked) {
-                if (document.getElementById('homeScreen').style.display !== 'block') {
-                    showLockedMessage();
-                }
-            }
-        }
-
-        // Check for teacher control commands
-        function checkForTeacherControl() {
-            if (!studentId) return;
-
-            const data = getSharedData();
-            const teacherControl = data.teacherControl || {};
-            const controlCommand = teacherControl[studentId];
-            
-            if (controlCommand && controlCommand.timestamp > lastUpdateCheck) {
-                if (controlCommand.action === 'closeTab') {
-                    // Close current tab and go home
-                    goHome();
-                    alert('Your teacher closed your current tab');
-                    
-                    // Log the action
-                    if (!data.activityLogs) data.activityLogs = {};
-                    if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
-                    data.activityLogs[studentId].push({
-                        action: 'Teacher closed tab',
-                        timestamp: Date.now()
-                    });
-                    saveSharedData(data);
-                    
-                    // Clear the control command
-                    delete teacherControl[studentId];
-                    data.teacherControl = teacherControl;
-                    saveSharedData(data);
-                } else if (controlCommand.url) {
-                    // Show teacher control notice
-                    document.getElementById('teacherControlUrl').textContent = controlCommand.url;
-                    document.getElementById('teacherControlNotice').style.display = 'block';
-                    document.getElementById('homeScreen').style.display = 'none';
-                    document.getElementById('websiteView').style.display = 'none';
-                    document.getElementById('newTabNotice').style.display = 'none';
-                    
-                    lastUpdateCheck = controlCommand.timestamp;
-                }
-            }
-        }
-
-        // Accept teacher control and navigate to the specified URL
-        function acceptTeacherControl() {
-            const data = getSharedData();
-            const teacherControl = data.teacherControl || {};
-            const controlCommand = teacherControl[studentId];
-            
-            if (controlCommand) {
-                document.getElementById('browserUrl').value = controlCommand.url;
-                navigateToUrl();
-                
-                // Log the teacher navigation
-                if (!data.activityLogs) data.activityLogs = {};
-                if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
-                data.activityLogs[studentId].push({
-                    action: `Teacher navigated to ${controlCommand.url}`,
-                    timestamp: Date.now()
-                });
-                
-                // Clear the control command
-                delete teacherControl[studentId];
-                data.teacherControl = teacherControl;
-                saveSharedData(data);
-                
-                document.getElementById('teacherControlNotice').style.display = 'none';
-            }
-        }
-
-        // Check for new messages from teacher
-        function checkForMessages() {
-            if (!studentId) return;
-
-            const data = getSharedData();
-            const messages = data.messages || {};
-            const studentMessages = messages[studentId];
-            
-            if (studentMessages && studentMessages.length > 0) {
-                const latestMessage = studentMessages[studentMessages.length - 1];
-                
-                // Only show if it's a new message
-                if (latestMessage.timestamp > lastMessageCheck) {
-                    lastMessageCheck = latestMessage.timestamp;
-                    showMessage(latestMessage.text, latestMessage.from);
-                }
-            }
-        }
-
-        function showMessage(message, from) {
-            document.getElementById('messageContent').textContent = message;
-            document.getElementById('messageFrom').textContent = `From: ${from}`;
-            document.getElementById('messageNotification').style.display = 'block';
-        }
-
-        function closeMessage() {
-            document.getElementById('messageNotification').style.display = 'none';
-        }
-
-        // Update student in shared data
-        function updateStudentInSharedData() {
-            const data = getSharedData();
-            data.students[currentStudent.id] = currentStudent;
-            saveSharedData(data);
-        }
-
-        // Get device info
-        function getDeviceInfo() {
-            const ua = navigator.userAgent;
-            if (/Mobile|Android|iPhone|iPad|iPod/.test(ua)) {
-                return 'Mobile';
-            } else if (/Tablet|iPad/.test(ua)) {
-                return 'Tablet';
-            } else {
-                return 'Desktop';
-            }
-        }
-
-        // Get website name from domain
-        function getWebsiteName(domain) {
-            const names = {
-                'google.com': 'Google',
-                'youtube.com': 'YouTube',
-                'wikipedia.org': 'Wikipedia',
-                'khanacademy.org': 'Khan Academy',
-                'github.com': 'GitHub',
-                'facebook.com': 'Facebook',
-                'twitter.com': 'Twitter',
-                'instagram.com': 'Instagram',
-                'tiktok.com': 'TikTok',
-                'netflix.com': 'Netflix',
-                'chat.openai.com': 'ChatGPT',
-                'stackoverflow.com': 'Stack Overflow',
-                'code.org': 'Code.org',
-                'scratch.mit.edu': 'Scratch',
-                'w3schools.com': 'W3Schools',
-                'duolingo.com': 'Duolingo',
-                'coursera.org': 'Coursera',
-                'edx.org': 'edX',
-                'udemy.com': 'Udemy'
-            };
-            return names[domain] || domain;
-        }
-
-        // Get website icon from domain
-        function getWebsiteIcon(domain) {
-            const icons = {
-                'google.com': '🔍',
-                'youtube.com': '📺',
-                'wikipedia.org': '📚',
-                'khanacademy.org': '🎓',
-                'github.com': '💻',
-                'facebook.com': '👥',
-                'twitter.com': '🐦',
-                'instagram.com': '📷',
-                'tiktok.com': '🎵',
-                'netflix.com': '🎬',
-                'chat.openai.com': '🤖',
-                'stackoverflow.com': '💡',
-                'code.org': '👨‍💻',
-                'scratch.mit.edu': '🐱',
-                'w3schools.com': '🌍',
-                'duolingo.com': '🦉',
-                'coursera.org': '🎓',
-                'edx.org': '📖',
-                'udemy.com': '🎯'
-            };
-            return icons[domain] || '🌐';
-        }
-
-        // Initialize
-        goHome();
     </script>
 </body>
 </html>
