@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" type="image/x-icon" href="ClassStakcs-Student-Access/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Class Stacks - Student Browser</title>
     <style>
@@ -521,6 +520,32 @@
             border: 2px solid #ddd;
             border-radius: 5px;
         }
+        
+        /* Website Viewer */
+        .website-viewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+            flex: 1;
+        }
+        
+        .iframe-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .fallback-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -704,6 +729,8 @@
         let activeTabIndex = 0;
         let updateInterval;
         let screenshotInterval;
+        let bypassActive = false;
+        let bypassExpiry = 0;
         
         // Tab class
         class Tab {
@@ -717,6 +744,7 @@
                 this.canGoBack = false;
                 this.canGoForward = false;
                 this.iframe = null;
+                this.contentElement = null;
             }
             
             navigateTo(url) {
@@ -804,6 +832,11 @@
                 if (e.key === 'F12') {
                     e.preventDefault();
                     toggleBypassPanel();
+                }
+                
+                // Enter key in URL bar
+                if (e.key === 'Enter' && document.activeElement.id === 'browserUrl') {
+                    navigateCurrentTab();
                 }
             });
         });
@@ -1109,6 +1142,13 @@
         
         // Navigate to URL in specific tab
         function navigateToUrl(url, tabIndex) {
+            // Check if bypass is active
+            if (bypassActive) {
+                // Bypass is active - load website directly
+                loadWebsiteDirectly(url, tabIndex);
+                return;
+            }
+            
             // Check if browser is locked
             const data = getSharedData();
             const classSettings = data.classSettings && data.classSettings[currentClassCode] ? 
@@ -1135,8 +1175,17 @@
                 return;
             }
             
+            // Load website
+            loadWebsiteDirectly(url, tabIndex);
+        }
+        
+        // Load website directly without CORS proxy
+        function loadWebsiteDirectly(url, tabIndex) {
             const tab = tabs[tabIndex];
-            tab.navigateTo(fullUrl);
+            tab.navigateTo(url);
+            
+            // Extract domain for title and favicon
+            const domain = extractDomain(url);
             tab.title = getWebsiteName(domain);
             tab.favicon = getWebsiteIcon(domain);
             
@@ -1153,7 +1202,7 @@
             if (!sharedData.activityLogs) sharedData.activityLogs = {};
             if (!sharedData.activityLogs[studentId]) sharedData.activityLogs[studentId] = [];
             sharedData.activityLogs[studentId].push({
-                action: `Visited ${getWebsiteName(domain)} (${fullUrl})`,
+                action: `Visited ${getWebsiteName(domain)} (${url})`,
                 timestamp: Date.now()
             });
             
@@ -1161,12 +1210,12 @@
             updateStudentTabs();
             saveSharedData(sharedData);
             
-            // Load the actual website using a CORS proxy
-            loadWebsiteWithProxy(fullUrl, tabIndex);
+            // Load the website
+            loadWebsiteWithFallback(url, tabIndex);
         }
         
-        // Load website using CORS proxy
-        function loadWebsiteWithProxy(url, tabIndex) {
+        // Load website with fallback for iframe restrictions
+        function loadWebsiteWithFallback(url, tabIndex) {
             const tab = tabs[tabIndex];
             const tabContent = document.getElementById(tab.id);
             
@@ -1175,80 +1224,53 @@
             
             // Create iframe for website
             const iframe = document.createElement('iframe');
-            iframe.className = 'browser-frame';
-            iframe.src = 'https://corsproxy.io/?' + encodeURIComponent(url);
+            iframe.className = 'website-viewer';
+            iframe.src = url;
             iframe.onload = function() {
                 // Hide loading message
                 hideLoadingMessage(tabIndex);
             };
             iframe.onerror = function() {
-                // If CORS proxy fails, show an error
-                hideLoadingMessage(tabIndex);
-                showWebsiteContent(url, tabIndex, true);
+                // If iframe fails, show fallback
+                showWebsiteFallback(url, tabIndex);
             };
             
             tabContent.appendChild(iframe);
             tab.iframe = iframe;
+            tab.contentElement = iframe;
         }
         
-        // Show website content (fallback)
-        function showWebsiteContent(url, tabIndex, isError = false) {
+        // Show website fallback when iframe fails
+        function showWebsiteFallback(url, tabIndex) {
             const tab = tabs[tabIndex];
             const tabContent = document.getElementById(tab.id);
             
             // Clear existing content
             tabContent.innerHTML = '';
             
-            if (isError) {
-                // Show error message
-                const errorMessage = document.createElement('div');
-                errorMessage.className = 'home-screen';
-                errorMessage.innerHTML = `
-                    <div style="background: #ffebee; color: #c62828; padding: 30px; border-radius: 10px; margin-bottom: 20px;">
-                        <div style="font-size: 3rem; margin-bottom: 10px;">⚠️</div>
-                        <h2 style="margin-bottom: 10px;">Unable to Load Website</h2>
-                        <p>There was an error loading the website. This could be due to CORS restrictions or the website blocking iframe embedding.</p>
-                        <p style="font-family: monospace; font-size: 0.9rem; margin-top: 10px;">${url}</p>
-                    </div>
-                    <div style="background: white; padding: 20px; border-radius: 10px; max-width: 600px; text-align: left;">
-                        <h3>Possible Solutions:</h3>
-                        <ul style="margin-top: 10px;">
-                            <li>The website may not allow embedding in iframes</li>
-                            <li>Try visiting the website directly in a new window</li>
-                            <li>Check if the URL is correct</li>
-                        </ul>
-                    </div>
-                `;
-                tabContent.appendChild(errorMessage);
-            } else {
-                // Create website preview
-                const websitePreview = document.createElement('div');
-                websitePreview.className = 'home-screen';
-                websitePreview.style.background = '#f8f9fa';
-                
-                const domain = extractDomain(url);
-                const websiteName = getWebsiteName(domain);
-                const websiteIcon = getWebsiteIcon(domain);
-                const websiteColor = getWebsiteColor(domain);
-                
-                websitePreview.innerHTML = `
-                    <div style="background: ${websiteColor}; color: white; padding: 30px; border-radius: 10px; margin-bottom: 20px;">
-                        <div style="font-size: 3rem; margin-bottom: 10px;">${websiteIcon}</div>
-                        <h2 style="margin-bottom: 10px;">${websiteName}</h2>
-                        <div style="font-family: monospace; font-size: 0.9rem;">${url}</div>
-                    </div>
-                    <div style="background: white; padding: 20px; border-radius: 10px; max-width: 600px; text-align: left;">
-                        <h3>Welcome to ${websiteName}</h3>
-                        <p>This is a simulated view of ${websiteName}. In a real implementation, this would be the actual website content loaded in an iframe.</p>
-                        <p><strong>Note:</strong> For security reasons, actual website embedding is limited in this demo. In a production environment, proper iframe security would be implemented.</p>
-                    </div>
-                    <div style="margin-top: 20px; color: #666;">
-                        <p>🟢 Currently viewing • Teacher can see this activity</p>
-                    </div>
-                `;
-                
-                tabContent.appendChild(websitePreview);
-            }
+            const fallback = document.createElement('div');
+            fallback.className = 'iframe-fallback';
+            fallback.innerHTML = `
+                <div style="font-size: 4rem; margin-bottom: 20px;">🌐</div>
+                <h2>Website Restricted</h2>
+                <p>This website cannot be displayed in the browser due to security restrictions.</p>
+                <p style="font-family: monospace; font-size: 0.9rem; margin-top: 10px; background: #f0f0f0; padding: 10px; border-radius: 5px;">${url}</p>
+                <div class="fallback-actions">
+                    <button class="btn" onclick="openWebsiteInNewWindow('${url}')">Open in New Window</button>
+                    <button class="btn" onclick="goHomeTab(${tabIndex})">Return to Home</button>
+                </div>
+            `;
+            
+            tabContent.appendChild(fallback);
+            tab.contentElement = fallback;
+            
+            // Hide loading message
+            hideLoadingMessage(tabIndex);
+        }
+        
+        // Open website in new window
+        function openWebsiteInNewWindow(url) {
+            window.open(url, '_blank');
         }
         
         // Show loading message
@@ -1264,7 +1286,7 @@
             loadingMessage.innerHTML = `
                 <div class="loading-icon">⏳</div>
                 <h3>Loading Website...</h3>
-                <p>Please wait while we load the website securely.</p>
+                <p>Please wait while we load the website.</p>
             `;
             
             tabContent.appendChild(loadingMessage);
@@ -1408,6 +1430,7 @@
             
             currentStudent.activeTab = activeTabIndex;
             currentStudent.lastActive = Date.now();
+            currentStudent.bypassActive = bypassActive;
             
             // Update in shared data
             const data = getSharedData();
@@ -1448,6 +1471,18 @@
                 checkForTeacherControl();
                 checkForScreenshotRequests();
                 reportStudentActivity();
+                
+                // Check if bypass has expired
+                if (bypassActive && Date.now() > bypassExpiry) {
+                    bypassActive = false;
+                    bypassExpiry = 0;
+                    updateStudentTabs();
+                    
+                    // Show notification
+                    const statusElement = document.getElementById('bypassStatus');
+                    statusElement.textContent = 'Bypass expired';
+                    statusElement.style.color = 'var(--danger)';
+                }
             }, 2000);
         }
         
@@ -1474,8 +1509,8 @@
             if (bypassCode && !isBypassCodeExpired(bypassCode) && !isBypassCodeUsedUp(bypassCode)) {
                 // Valid bypass code
                 bypassCode.usageCount = (bypassCode.usageCount || 0) + 1;
-                currentStudent.bypassActive = true;
-                currentStudent.bypassExpiry = Date.now() + (30 * 60 * 1000); // 30 minutes
+                bypassActive = true;
+                bypassExpiry = Date.now() + (30 * 60 * 1000); // 30 minutes
                 
                 statusElement.textContent = 'Bypass activated for 30 minutes!';
                 statusElement.style.color = 'var(--success)';
@@ -1900,6 +1935,8 @@
             currentClassCode = '';
             tabs = [];
             activeTabIndex = 0;
+            bypassActive = false;
+            bypassExpiry = 0;
         }
     </script>
 </body>
