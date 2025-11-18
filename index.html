@@ -10,6 +10,7 @@
             --secondary: #3f37c9;
             --danger: #e63946;
             --success: #2a9d8f;
+            --warning: #f4a261;
             --dark: #212529;
             --light: #f8f9fa;
             --tab-active: #ffffff;
@@ -27,14 +28,16 @@
         body {
             background: #f5f7fb;
             color: var(--dark);
+            overflow: hidden;
         }
         
+        /* Authentication Styles */
         .auth-container {
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             padding: 20px;
         }
         
@@ -114,6 +117,7 @@
             display: none;
         }
         
+        /* Student Browser Styles */
         .student-browser {
             display: none;
             height: 100vh;
@@ -546,6 +550,218 @@
             display: flex;
             gap: 10px;
         }
+        
+        /* Whiteboard Styles */
+        .whiteboard-container {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            background: white;
+        }
+        
+        .whiteboard-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .whiteboard-controls {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e5ee;
+        }
+        
+        .whiteboard-tool {
+            padding: 8px 15px;
+            border: 1px solid #e1e5ee;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .whiteboard-tool.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .whiteboard-canvas-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .whiteboard-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+        
+        .whiteboard-users {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .user-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        
+        .user-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        /* Settings Styles */
+        .settings-container {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            background: white;
+        }
+        
+        .settings-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .settings-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .settings-section {
+            margin-bottom: 30px;
+        }
+        
+        .settings-section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e1e5ee;
+        }
+        
+        .theme-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .theme-option {
+            padding: 15px;
+            border: 2px solid #e1e5ee;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .theme-option:hover {
+            border-color: var(--primary);
+        }
+        
+        .theme-option.active {
+            border-color: var(--primary);
+            background: rgba(67, 97, 238, 0.1);
+        }
+        
+        .theme-preview {
+            width: 100%;
+            height: 60px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        /* Addons Styles */
+        .addons-container {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            background: white;
+        }
+        
+        .addons-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .addons-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .addons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .addon-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            padding: 20px;
+            border: 1px solid #e1e5ee;
+            transition: all 0.3s;
+        }
+        
+        .addon-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        
+        .addon-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .addon-icon {
+            font-size: 1.5rem;
+        }
+        
+        .addon-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .addon-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .addon-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -678,7 +894,237 @@
                         <li>Use <strong>Ctrl+Tab</strong> to switch between tabs</li>
                         <li>Type URLs in the address bar and press Enter to visit websites</li>
                         <li>Use <strong>Ctrl+B</strong> to toggle the bypass code panel</li>
+                        <li>Visit <strong>browser://whiteboard</strong> to join whiteboard sessions</li>
+                        <li>Visit <strong>browser://settings</strong> to customize your browser</li>
+                        <li>Visit <strong>browser://addons</strong> to install browser extensions</li>
                     </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Whiteboard -->
+    <div class="whiteboard-container" id="whiteboardContainer">
+        <div class="whiteboard-header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="font-size: 1.5rem;">📝</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 1.2rem;">Class Stacks Whiteboard</div>
+                    <div style="font-size: 0.9rem;">Collaborative Whiteboard Session</div>
+                </div>
+            </div>
+            <div>
+                <button class="btn" onclick="exitWhiteboard()" style="padding: 8px 15px;">Exit Whiteboard</button>
+            </div>
+        </div>
+        
+        <div class="whiteboard-controls">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="whiteboard-tool active" data-tool="pen" onclick="selectTool('pen')">✏️ Pen</button>
+                <button class="whiteboard-tool" data-tool="eraser" onclick="selectTool('eraser')">🧽 Eraser</button>
+                <button class="whiteboard-tool" data-tool="line" onclick="selectTool('line')">📏 Line</button>
+                <button class="whiteboard-tool" data-tool="rectangle" onclick="selectTool('rectangle')">⬜ Rectangle</button>
+                <button class="whiteboard-tool" data-tool="circle" onclick="selectTool('circle')">⭕ Circle</button>
+                <button class="whiteboard-tool" data-tool="text" onclick="selectTool('text')">🔤 Text</button>
+                <input type="color" id="drawingColor" value="#000000" onchange="changeColor(this.value)">
+                <input type="range" id="brushSize" min="1" max="20" value="3" onchange="changeBrushSize(this.value)">
+                <button class="btn btn-danger" onclick="clearWhiteboard()">Clear</button>
+            </div>
+        </div>
+        
+        <div class="whiteboard-canvas-container">
+            <canvas class="whiteboard-canvas" id="whiteboardCanvas"></canvas>
+            <div class="whiteboard-users" id="whiteboardUsers">
+                <h4>Active Users</h4>
+                <div id="usersList">
+                    <div class="user-indicator">
+                        <div class="user-color" style="background: #4361ee;"></div>
+                        <span>You</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings -->
+    <div class="settings-container" id="settingsContainer">
+        <div class="settings-header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="font-size: 1.5rem;">⚙️</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 1.2rem;">Browser Settings</div>
+                    <div style="font-size: 0.9rem;">Customize your browsing experience</div>
+                </div>
+            </div>
+            <div>
+                <button class="btn" onclick="exitSettings()" style="padding: 8px 15px;">Back to Browser</button>
+            </div>
+        </div>
+        
+        <div class="settings-content">
+            <div class="settings-section">
+                <div class="settings-section-title">Appearance</div>
+                <div class="theme-options">
+                    <div class="theme-option active" onclick="selectTheme('default')">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);"></div>
+                        <div>Default Blue</div>
+                    </div>
+                    <div class="theme-option" onclick="selectTheme('dark')">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);"></div>
+                        <div>Dark Mode</div>
+                    </div>
+                    <div class="theme-option" onclick="selectTheme('green')">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #2a9d8f 0%, #219653 100%);"></div>
+                        <div>Green Theme</div>
+                    </div>
+                    <div class="theme-option" onclick="selectTheme('purple')">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #6a0dad 0%, #8a2be2 100%);"></div>
+                        <div>Purple Theme</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <div class="settings-section-title">Browser Behavior</div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="newTabBlank" checked> Open new tabs with blank page
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="showHomeButton"> Show home button in navigation
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="autoComplete"> Enable address bar autocomplete
+                    </label>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <div class="settings-section-title">Privacy & Security</div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="blockPopups" checked> Block pop-up windows
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="clearHistoryOnExit"> Clear browsing history on exit
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="doNotTrack"> Send "Do Not Track" requests
+                    </label>
+                </div>
+            </div>
+            
+            <button class="btn" onclick="saveSettings()" style="width: auto;">Save Settings</button>
+        </div>
+    </div>
+    
+    <!-- Addons -->
+    <div class="addons-container" id="addonsContainer">
+        <div class="addons-header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="font-size: 1.5rem;">🧩</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 1.2rem;">Browser Addons</div>
+                    <div style="font-size: 0.9rem;">Enhance your browsing experience</div>
+                </div>
+            </div>
+            <div>
+                <button class="btn" onclick="exitAddons()" style="padding: 8px 15px;">Back to Browser</button>
+            </div>
+        </div>
+        
+        <div class="addons-content">
+            <div class="addons-grid">
+                <div class="addon-card">
+                    <div class="addon-header">
+                        <div class="addon-icon">📚</div>
+                        <div class="addon-title">Dictionary Extension</div>
+                    </div>
+                    <div class="addon-description">
+                        Double-click any word to see its definition. Perfect for reading and research.
+                    </div>
+                    <div class="addon-actions">
+                        <div style="font-size: 0.9rem; color: #666;">Version 1.2</div>
+                        <button class="btn" style="padding: 5px 10px;" onclick="installAddon('dictionary')">Install</button>
+                    </div>
+                </div>
+                
+                <div class="addon-card">
+                    <div class="addon-header">
+                        <div class="addon-icon">🔍</div>
+                        <div class="addon-title">Quick Search</div>
+                    </div>
+                    <div class="addon-description">
+                        Select text and right-click to search quickly without leaving the page.
+                    </div>
+                    <div class="addon-actions">
+                        <div style="font-size: 0.9rem; color: #666;">Version 1.0</div>
+                        <button class="btn" style="padding: 5px 10px;" onclick="installAddon('quickSearch')">Install</button>
+                    </div>
+                </div>
+                
+                <div class="addon-card">
+                    <div class="addon-header">
+                        <div class="addon-icon">📝</div>
+                        <div class="addon-title">Note Taker</div>
+                    </div>
+                    <div class="addon-description">
+                        Take notes while browsing and save them for later review.
+                    </div>
+                    <div class="addon-actions">
+                        <div style="font-size: 0.9rem; color: #666;">Version 1.1</div>
+                        <button class="btn" style="padding: 5px 10px;" onclick="installAddon('noteTaker')">Install</button>
+                    </div>
+                </div>
+                
+                <div class="addon-card">
+                    <div class="addon-header">
+                        <div class="addon-icon">⏱️</div>
+                        <div class="addon-title">Focus Timer</div>
+                    </div>
+                    <div class="addon-description">
+                        Set timers for focused work sessions with breaks to maximize productivity.
+                    </div>
+                    <div class="addon-actions">
+                        <div style="font-size: 0.9rem; color: #666;">Version 1.3</div>
+                        <button class="btn" style="padding: 5px 10px;" onclick="installAddon('focusTimer')">Install</button>
+                    </div>
+                </div>
+                
+                <div class="addon-card">
+                    <div class="addon-header">
+                        <div class="addon-icon">🎨</div>
+                        <div class="addon-title">Dark Reader</div>
+                    </div>
+                    <div class="addon-description">
+                        Automatically apply dark mode to all websites for comfortable night browsing.
+                    </div>
+                    <div class="addon-actions">
+                        <div style="font-size: 0.9rem; color: #666;">Version 1.5</div>
+                        <button class="btn" style="padding: 5px 10px;" onclick="installAddon('darkReader')">Install</button>
+                    </div>
+                </div>
+                
+                <div class="addon-card">
+                    <div class="addon-header">
+                        <div class="addon-icon">📊</div>
+                        <div class="addon-title">Productivity Tracker</div>
+                    </div>
+                    <div class="addon-description">
+                        Track how you spend your time online and get insights on your browsing habits.
+                    </div>
+                    <div class="addon-actions">
+                        <div style="font-size: 0.9rem; color: #666;">Version 1.2</div>
+                        <button class="btn" style="padding: 5px 10px;" onclick="installAddon('productivityTracker')">Install</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -731,6 +1177,16 @@
         let screenshotInterval;
         let bypassActive = false;
         let bypassExpiry = 0;
+        let installedAddons = [];
+        
+        // Whiteboard variables
+        let whiteboardActive = false;
+        let currentTool = 'pen';
+        let drawingColor = '#000000';
+        let brushSize = 3;
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
         
         // Tab class
         class Tab {
@@ -808,35 +1264,37 @@
             
             // Set up keyboard shortcuts
             document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey || e.metaKey) {
-                    switch(e.key) {
-                        case 't':
-                            e.preventDefault();
-                            createNewTab();
-                            break;
-                        case 'w':
-                            e.preventDefault();
-                            closeCurrentTab();
-                            break;
-                        case 'r':
-                            e.preventDefault();
-                            reloadTab();
-                            break;
-                        case 'b':
-                            e.preventDefault();
-                            toggleBypassPanel();
-                            break;
+                if (document.getElementById('studentBrowser').style.display === 'flex') {
+                    if (e.ctrlKey || e.metaKey) {
+                        switch(e.key) {
+                            case 't':
+                                e.preventDefault();
+                                createNewTab();
+                                break;
+                            case 'w':
+                                e.preventDefault();
+                                closeCurrentTab();
+                                break;
+                            case 'r':
+                                e.preventDefault();
+                                reloadTab();
+                                break;
+                            case 'b':
+                                e.preventDefault();
+                                toggleBypassPanel();
+                                break;
+                        }
                     }
-                }
-                
-                if (e.key === 'F12') {
-                    e.preventDefault();
-                    toggleBypassPanel();
-                }
-                
-                // Enter key in URL bar
-                if (e.key === 'Enter' && document.activeElement.id === 'browserUrl') {
-                    navigateCurrentTab();
+                    
+                    if (e.key === 'F12') {
+                        e.preventDefault();
+                        toggleBypassPanel();
+                    }
+                    
+                    // Enter key in URL bar
+                    if (e.key === 'Enter' && document.activeElement.id === 'browserUrl') {
+                        navigateCurrentTab();
+                    }
                 }
             });
         });
@@ -944,7 +1402,7 @@
             startActivityReporting();
             
             // Start monitoring for teacher commands
-            startMonitoring();
+            startStudentMonitoring();
             
             // Start automatic screenshots
             startAutomaticScreenshots();
@@ -980,6 +1438,9 @@
             // If URL provided, navigate to it
             if (url) {
                 navigateToUrl(url, activeTabIndex);
+            } else {
+                // New tabs start with blank page
+                goHomeTab(activeTabIndex);
             }
             
             // Update student data
@@ -1142,6 +1603,18 @@
         
         // Navigate to URL in specific tab
         function navigateToUrl(url, tabIndex) {
+            // Check for special browser URLs
+            if (url === 'browser://whiteboard') {
+                showWhiteboard();
+                return;
+            } else if (url === 'browser://settings') {
+                showSettings();
+                return;
+            } else if (url === 'browser://addons') {
+                showAddons();
+                return;
+            }
+            
             // Check if bypass is active
             if (bypassActive) {
                 // Bypass is active - load website directly
@@ -1229,6 +1702,9 @@
             iframe.onload = function() {
                 // Hide loading message
                 hideLoadingMessage(tabIndex);
+                
+                // Apply addons
+                applyAddonsToIframe(iframe);
             };
             iframe.onerror = function() {
                 // If iframe fails, show fallback
@@ -1462,10 +1938,10 @@
             // Update connection status
             const statusElement = document.getElementById('connectionStatus');
             statusElement.style.background = 'var(--success)';
-            statusElement.textContent = '🔄 Connected';
+            statusElement.textContent = '🛜 Connected';
         }
         
-        function startMonitoring() {
+        function startStudentMonitoring() {
             setInterval(() => {
                 checkForMessages();
                 checkForTeacherControl();
@@ -1577,7 +2053,15 @@
             const teacherControl = data.teacherControl || {};
             const controlCommand = teacherControl[studentId];
             
-            if (controlCommand && controlCommand.action === 'closeTab') {
+            if (controlCommand && controlCommand.action === 'openTab') {
+                // Teacher is opening a tab for the student
+                createNewTab(controlCommand.url);
+                
+                // Clear the control command
+                delete teacherControl[studentId];
+                data.teacherControl = teacherControl;
+                saveSharedData(data);
+            } else if (controlCommand && controlCommand.action === 'closeTab') {
                 // Close current tab and go home
                 goHome();
                 
@@ -1772,6 +2256,155 @@
             ctx.fillText(`Time: ${new Date().toLocaleTimeString()}`, width - 140, height - 20);
         }
         
+        // Whiteboard functions
+        function showWhiteboard() {
+            document.getElementById('studentBrowser').style.display = 'none';
+            document.getElementById('whiteboardContainer').style.display = 'flex';
+            
+            // Initialize whiteboard canvas
+            const canvas = document.getElementById('whiteboardCanvas');
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            
+            // Set up drawing events
+            setupWhiteboardEvents();
+        }
+        
+        function exitWhiteboard() {
+            document.getElementById('whiteboardContainer').style.display = 'none';
+            document.getElementById('studentBrowser').style.display = 'flex';
+        }
+        
+        function setupWhiteboardEvents() {
+            const canvas = document.getElementById('whiteboardCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            
+            function startDrawing(e) {
+                isDrawing = true;
+                const rect = canvas.getBoundingClientRect();
+                lastX = e.clientX - rect.left;
+                lastY = e.clientY - rect.top;
+            }
+            
+            function draw(e) {
+                if (!isDrawing) return;
+                
+                const rect = canvas.getBoundingClientRect();
+                const currentX = e.clientX - rect.left;
+                const currentY = e.clientY - rect.top;
+                
+                ctx.strokeStyle = drawingColor;
+                ctx.lineWidth = brushSize;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(currentX, currentY);
+                ctx.stroke();
+                
+                lastX = currentX;
+                lastY = currentY;
+            }
+            
+            function stopDrawing() {
+                isDrawing = false;
+            }
+        }
+        
+        function selectTool(tool) {
+            currentTool = tool;
+            
+            // Update tool buttons
+            document.querySelectorAll('.whiteboard-tool').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.querySelector(`.whiteboard-tool[data-tool="${tool}"]`).classList.add('active');
+        }
+        
+        function changeColor(color) {
+            drawingColor = color;
+        }
+        
+        function changeBrushSize(size) {
+            brushSize = parseInt(size);
+        }
+        
+        function clearWhiteboard() {
+            const canvas = document.getElementById('whiteboardCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        // Settings functions
+        function showSettings() {
+            document.getElementById('studentBrowser').style.display = 'none';
+            document.getElementById('settingsContainer').style.display = 'flex';
+        }
+        
+        function exitSettings() {
+            document.getElementById('settingsContainer').style.display = 'none';
+            document.getElementById('studentBrowser').style.display = 'flex';
+        }
+        
+        function selectTheme(theme) {
+            // Update theme buttons
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            document.querySelector(`.theme-option[onclick="selectTheme('${theme}')"]`).classList.add('active');
+            
+            // In a real implementation, this would change the browser theme
+            showSuccess(`Theme changed to ${theme}`);
+        }
+        
+        function saveSettings() {
+            // In a real implementation, this would save the settings
+            showSuccess('Settings saved successfully!');
+        }
+        
+        // Addons functions
+        function showAddons() {
+            document.getElementById('studentBrowser').style.display = 'none';
+            document.getElementById('addonsContainer').style.display = 'flex';
+        }
+        
+        function exitAddons() {
+            document.getElementById('addonsContainer').style.display = 'none';
+            document.getElementById('studentBrowser').style.display = 'flex';
+        }
+        
+        function installAddon(addonName) {
+            if (!installedAddons.includes(addonName)) {
+                installedAddons.push(addonName);
+                showSuccess(`${addonName} addon installed successfully!`);
+                
+                // Apply addons to all open tabs
+                tabs.forEach(tab => {
+                    if (tab.iframe) {
+                        applyAddonsToIframe(tab.iframe);
+                    }
+                });
+            } else {
+                showSuccess(`${addonName} addon is already installed!`);
+            }
+        }
+        
+        function applyAddonsToIframe(iframe) {
+            // This is a simplified version - in a real implementation,
+            // this would inject JavaScript into the iframe to add functionality
+            
+            // For demonstration, we'll just log that addons would be applied
+            console.log('Applying addons to iframe:', installedAddons);
+        }
+        
         // Utility functions
         function getSharedData() {
             const defaultData = {
@@ -1899,6 +2532,31 @@
             setTimeout(() => errorElement.style.display = 'none', 5000);
         }
         
+        function showSuccess(message) {
+            // Create a temporary success message
+            const successElement = document.createElement('div');
+            successElement.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--success);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 1001;
+                max-width: 400px;
+                text-align: center;
+            `;
+            successElement.textContent = message;
+            document.body.appendChild(successElement);
+            
+            setTimeout(() => {
+                document.body.removeChild(successElement);
+            }, 3000);
+        }
+        
         function logout() {
             if (currentStudent) {
                 // Mark student as inactive
@@ -1937,6 +2595,7 @@
             activeTabIndex = 0;
             bypassActive = false;
             bypassExpiry = 0;
+            installedAddons = [];
         }
     </script>
 </body>
