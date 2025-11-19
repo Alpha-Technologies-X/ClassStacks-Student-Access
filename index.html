@@ -103,6 +103,10 @@
             background: var(--secondary);
         }
         
+        .btn-success {
+            background: var(--success);
+        }
+        
         .btn-danger {
             background: var(--danger);
         }
@@ -367,6 +371,93 @@
         .website-icon {
             font-size: 2rem;
             margin-bottom: 10px;
+        }
+        
+        /* Connection Page Styles */
+        .connection-container {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            background: white;
+        }
+        
+        .connection-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .connection-content {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .connection-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .connection-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+        
+        .connection-subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 30px;
+            max-width: 500px;
+        }
+        
+        .connection-code {
+            font-family: monospace;
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px dashed #e1e5ee;
+            letter-spacing: 5px;
+        }
+        
+        .connection-instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            max-width: 500px;
+            text-align: left;
+        }
+        
+        .connection-instructions h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .connection-instructions ol {
+            padding-left: 20px;
+        }
+        
+        .connection-instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .connection-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
         }
         
         /* Blocked/Locked Messages */
@@ -897,9 +988,55 @@
                         <li>Visit <strong>browser://whiteboard</strong> to join whiteboard sessions</li>
                         <li>Visit <strong>browser://settings</strong> to customize your browser</li>
                         <li>Visit <strong>browser://addons</strong> to install browser extensions</li>
+                        <li>Visit <strong>browser://connect</strong> to generate a connection code</li>
                     </ul>
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <!-- Connection Page -->
+    <div class="connection-container" id="connectionContainer">
+        <div class="connection-header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="font-size: 1.5rem;">🔗</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 1.2rem;">Generate Connection Code</div>
+                    <div style="font-size: 0.9rem;">Connect with Teacher/Parent Dashboard</div>
+                </div>
+            </div>
+            <div>
+                <button class="btn" onclick="exitConnectionPage()" style="padding: 8px 15px;">Back to Browser</button>
+            </div>
+        </div>
+        
+        <div class="connection-content">
+            <div class="connection-icon">🔗</div>
+            <div class="connection-title">Generate Connection Code</div>
+            <div class="connection-subtitle">
+                Share this code with your teacher or parent to connect your browser to their dashboard.
+                They will be able to monitor your browsing activity and provide assistance.
+            </div>
+            
+            <div class="connection-code" id="connectionCodeDisplay">GENERATING...</div>
+            
+            <div class="connection-actions">
+                <button class="btn btn-success" onclick="generateConnectionCode()">Generate New Code</button>
+                <button class="btn" onclick="copyConnectionCode()">Copy Code</button>
+            </div>
+            
+            <div class="connection-instructions">
+                <h3>How to Connect:</h3>
+                <ol>
+                    <li>Share the connection code above with your teacher or parent</li>
+                    <li>They will enter this code in their dashboard</li>
+                    <li>Once connected, they can monitor your browsing activity</li>
+                    <li>They can send you messages, lock your browser, or request screenshots</li>
+                    <li>This connection will remain active until you exit the browser</li>
+                </ol>
+            </div>
+            
+            <div id="connectionStatusMessage" style="margin-top: 20px; padding: 10px; border-radius: 5px; display: none;"></div>
         </div>
     </div>
     
@@ -1178,6 +1315,7 @@
         let bypassActive = false;
         let bypassExpiry = 0;
         let installedAddons = [];
+        let connectionCode = '';
         
         // Whiteboard variables
         let whiteboardActive = false;
@@ -1613,6 +1751,9 @@
             } else if (url === 'browser://addons') {
                 showAddons();
                 return;
+            } else if (url === 'browser://connect') {
+                showConnectionPage();
+                return;
             }
             
             // Check if bypass is active
@@ -1907,6 +2048,7 @@
             currentStudent.activeTab = activeTabIndex;
             currentStudent.lastActive = Date.now();
             currentStudent.bypassActive = bypassActive;
+            currentStudent.connectionCode = connectionCode;
             
             // Update in shared data
             const data = getSharedData();
@@ -1960,6 +2102,118 @@
                     statusElement.style.color = 'var(--danger)';
                 }
             }, 2000);
+        }
+        
+        // Connection Page Functions
+        function showConnectionPage() {
+            document.getElementById('studentBrowser').style.display = 'none';
+            document.getElementById('connectionContainer').style.display = 'flex';
+            
+            // Generate a connection code if one doesn't exist
+            if (!connectionCode) {
+                generateConnectionCode();
+            } else {
+                document.getElementById('connectionCodeDisplay').textContent = connectionCode;
+            }
+        }
+        
+        function exitConnectionPage() {
+            document.getElementById('connectionContainer').style.display = 'none';
+            document.getElementById('studentBrowser').style.display = 'flex';
+        }
+        
+        function generateConnectionCode() {
+            // Generate a random 8-character alphanumeric code
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 8; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            
+            connectionCode = code;
+            document.getElementById('connectionCodeDisplay').textContent = code;
+            
+            // Update student data with connection code
+            updateStudentTabs();
+            
+            // Show success message
+            const statusElement = document.getElementById('connectionStatusMessage');
+            statusElement.textContent = 'Connection code generated successfully!';
+            statusElement.style.background = 'var(--success)';
+            statusElement.style.color = 'white';
+            statusElement.style.display = 'block';
+            
+            // Log the connection code generation
+            const data = getSharedData();
+            if (!data.activityLogs) data.activityLogs = {};
+            if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
+            data.activityLogs[studentId].push({
+                action: 'Generated connection code',
+                timestamp: Date.now(),
+                code: connectionCode
+            });
+            
+            saveSharedData(data);
+            
+            // Auto-hide message after 3 seconds
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 3000);
+        }
+        
+        function copyConnectionCode() {
+            if (!connectionCode) return;
+            
+            // Use the Clipboard API if available
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(connectionCode).then(() => {
+                    const statusElement = document.getElementById('connectionStatusMessage');
+                    statusElement.textContent = 'Connection code copied to clipboard!';
+                    statusElement.style.background = 'var(--success)';
+                    statusElement.style.color = 'white';
+                    statusElement.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        statusElement.style.display = 'none';
+                    }, 3000);
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                    fallbackCopyToClipboard();
+                });
+            } else {
+                fallbackCopyToClipboard();
+            }
+        }
+        
+        function fallbackCopyToClipboard() {
+            const textArea = document.createElement('textarea');
+            textArea.value = connectionCode;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                const statusElement = document.getElementById('connectionStatusMessage');
+                statusElement.textContent = 'Connection code copied to clipboard!';
+                statusElement.style.background = 'var(--success)';
+                statusElement.style.color = 'white';
+                statusElement.style.display = 'block';
+                
+                setTimeout(() => {
+                    statusElement.style.display = 'none';
+                }, 3000);
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+                const statusElement = document.getElementById('connectionStatusMessage');
+                statusElement.textContent = 'Failed to copy code to clipboard';
+                statusElement.style.background = 'var(--danger)';
+                statusElement.style.color = 'white';
+                statusElement.style.display = 'block';
+                
+                setTimeout(() => {
+                    statusElement.style.display = 'none';
+                }, 3000);
+            }
+            document.body.removeChild(textArea);
         }
         
         // Bypass code functionality
@@ -2596,6 +2850,7 @@
             bypassActive = false;
             bypassExpiry = 0;
             installedAddons = [];
+            connectionCode = '';
         }
     </script>
 </body>
