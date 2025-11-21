@@ -47,7 +47,7 @@
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 450px;
+            max-width: 500px;
         }
         
         .logo {
@@ -642,6 +642,26 @@
             gap: 10px;
         }
         
+        /* Class Status Indicator */
+        .class-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .status-active {
+            background: #e7f7e9;
+            color: var(--success);
+        }
+        
+        .status-inactive {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
         /* Whiteboard Styles */
         .whiteboard-container {
             display: none;
@@ -866,15 +886,20 @@
             
             <form id="authForm">
                 <div class="form-group">
-                    <label for="studentName">Your Name</label>
-                    <input type="text" id="studentName" placeholder="Enter your name" required>
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" placeholder="Enter your first name" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="classCode">Class Code</label>
-                    <input type="text" id="classCode" placeholder="Enter class code from teacher" required>
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" placeholder="Enter your last name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="schoolCode">School Code</label>
+                    <input type="text" id="schoolCode" placeholder="Enter your school code" required>
                     <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">
-                        Ask your teacher for the current class code
+                        Ask your teacher for the school code
                     </div>
                 </div>
                 
@@ -885,9 +910,10 @@
             
             <div style="margin-top: 25px; padding: 20px; background: #f8f9fa; border-radius: 10px; font-size: 14px;">
                 <strong>How to Connect:</strong><br>
-                1. Ask your teacher for the current class code<br>
-                2. Enter your name and the class code<br>
-                3. Click "Enter Browser" to start
+                1. Enter your first and last name<br>
+                2. Enter your school code<br>
+                3. Click "Enter Browser" to start browsing<br>
+                4. Visit <strong>browser://connect</strong> to connect to a class
             </div>
         </div>
     </div>
@@ -900,7 +926,8 @@
                 <div class="student-avatar" id="studentAvatar">S</div>
                 <div class="student-details">
                     <strong id="studentNameDisplay">Student Name</strong><br>
-                    Class: <span id="classCodeDisplay">Class Code</span>
+                    School: <span id="schoolCodeDisplay">School Code</span>
+                    <span class="class-status status-inactive" id="classStatus">No Active Class</span>
                 </div>
             </div>
             <div>
@@ -939,7 +966,7 @@
             <div class="home-screen">
                 <div class="welcome-message">
                     Welcome to Class Stacks Browser!<br>
-                    <small style="font-size: 1rem; color: #666;">Start browsing or try one of these educational sites:</small>
+                    <small style="font-size: 1rem; color: #666;" id="browserStatusMessage">You can browse the web freely. School-wide restrictions apply.</small>
                 </div>
                 
                 <div class="website-grid">
@@ -988,7 +1015,7 @@
                         <li>Visit <strong>browser://whiteboard</strong> to join whiteboard sessions</li>
                         <li>Visit <strong>browser://settings</strong> to customize your browser</li>
                         <li>Visit <strong>browser://addons</strong> to install browser extensions</li>
-                        <li>Visit <strong>browser://connect</strong> to generate a connection code</li>
+                        <li>Visit <strong>browser://connect</strong> to connect to a class</li>
                     </ul>
                 </div>
             </div>
@@ -1001,8 +1028,8 @@
             <div style="display: flex; align-items: center; gap: 15px;">
                 <div style="font-size: 1.5rem;">🔗</div>
                 <div>
-                    <div style="font-weight: 600; font-size: 1.2rem;">Generate Connection Code</div>
-                    <div style="font-size: 0.9rem;">Connect with Teacher/Parent Dashboard</div>
+                    <div style="font-weight: 600; font-size: 1.2rem;">Connect to Class</div>
+                    <div style="font-size: 0.9rem;">Enter class connection code</div>
                 </div>
             </div>
             <div>
@@ -1012,31 +1039,33 @@
         
         <div class="connection-content">
             <div class="connection-icon">🔗</div>
-            <div class="connection-title">Generate Connection Code</div>
+            <div class="connection-title">Connect to Class</div>
             <div class="connection-subtitle">
-                Share this code with your teacher or parent to connect your browser to their dashboard.
-                They will be able to monitor your browsing activity and provide assistance.
+                Enter your class connection code to join a class session. 
+                Your teacher will provide this code.
             </div>
             
-            <div class="connection-code" id="connectionCodeDisplay">GENERATING...</div>
+            <div class="form-group" style="max-width: 300px;">
+                <label for="classConnectionCode">Class Connection Code</label>
+                <input type="text" id="classConnectionCode" placeholder="Enter class code" style="text-align: center; font-size: 1.2rem; letter-spacing: 2px;">
+            </div>
             
             <div class="connection-actions">
-                <button class="btn btn-success" onclick="generateConnectionCode()">Generate New Code</button>
-                <button class="btn" onclick="copyConnectionCode()">Copy Code</button>
-            </div>
-            
-            <div class="connection-instructions">
-                <h3>How to Connect:</h3>
-                <ol>
-                    <li>Share the connection code above with your teacher or parent</li>
-                    <li>They will enter this code in their dashboard</li>
-                    <li>Once connected, they can monitor your browsing activity</li>
-                    <li>They can send you messages, lock your browser, or request screenshots</li>
-                    <li>This connection will remain active until you exit the browser</li>
-                </ol>
+                <button class="btn btn-success" onclick="connectToClass()">Connect to Class</button>
             </div>
             
             <div id="connectionStatusMessage" style="margin-top: 20px; padding: 10px; border-radius: 5px; display: none;"></div>
+            
+            <div class="connection-instructions">
+                <h3>How Class Connection Works:</h3>
+                <ol>
+                    <li>Your teacher will provide a class connection code</li>
+                    <li>Enter the code above to join the class session</li>
+                    <li>Once connected, class-specific restrictions will apply</li>
+                    <li>You can still browse when not in an active class (school-wide restrictions only)</li>
+                    <li>Class connection remains active until you disconnect or the class ends</li>
+                </ol>
+            </div>
         </div>
     </div>
     
@@ -1307,6 +1336,7 @@
         // Global variables
         let currentStudent = null;
         let studentId = null;
+        let currentSchoolCode = '';
         let currentClassCode = '';
         let tabs = [];
         let activeTabIndex = 0;
@@ -1384,9 +1414,10 @@
                 try {
                     currentStudent = JSON.parse(savedStudent);
                     studentId = currentStudent.id;
-                    currentClassCode = currentStudent.classCode;
+                    currentSchoolCode = currentStudent.schoolCode;
+                    currentClassCode = currentStudent.classCode || '';
                     
-                    // Verify the class still exists
+                    // Verify the school still exists
                     const data = getSharedData();
                     if (data.students && data.students[studentId]) {
                         showStudentBrowser();
@@ -1441,16 +1472,17 @@
         document.getElementById('authForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const studentName = document.getElementById('studentName').value.trim();
-            const classCode = document.getElementById('classCode').value.trim().toUpperCase();
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const schoolCode = document.getElementById('schoolCode').value.trim().toUpperCase();
             
-            if (!studentName) {
-                showError('Please enter your name');
+            if (!firstName || !lastName) {
+                showError('Please enter both first and last name');
                 return;
             }
             
-            if (!classCode) {
-                showError('Please enter a class code');
+            if (!schoolCode) {
+                showError('Please enter a school code');
                 return;
             }
             
@@ -1460,20 +1492,26 @@
             submitBtn.textContent = 'Connecting...';
             submitBtn.disabled = true;
             
-            // Check if class code exists
+            // Check if school code exists
             setTimeout(() => {
                 const data = getSharedData();
-                const classExists = data.classes && data.classes[classCode];
+                const schoolExists = Object.values(data.schools).find(school => 
+                    school.schoolCode === schoolCode
+                );
                 
-                if (classExists) {
-                    // Class code is valid - create student session
-                    studentId = 'student_' + btoa(studentName + classCode).replace(/[^a-zA-Z0-9]/g, '');
-                    currentClassCode = classCode;
+                if (schoolExists) {
+                    // School code is valid - create student session
+                    const studentName = `${firstName} ${lastName}`;
+                    studentId = 'student_' + btoa(studentName + schoolCode).replace(/[^a-zA-Z0-9]/g, '');
+                    currentSchoolCode = schoolCode;
                     
                     currentStudent = {
                         id: studentId,
+                        firstName: firstName,
+                        lastName: lastName,
                         name: studentName,
-                        classCode: classCode,
+                        schoolCode: schoolCode,
+                        classCode: '',
                         lastActive: Date.now(),
                         device: getDeviceInfo(),
                         connected: true,
@@ -1481,41 +1519,31 @@
                         activeTab: 0
                     };
                     
-                    // Register student with teacher dashboard
+                    // Register student with school
                     registerStudent();
                     
                     // Save student data
                     localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
                     showStudentBrowser();
                 } else {
-                    showError(`Class code "${classCode}" not found. Please check with your teacher.`);
+                    showError(`School code "${schoolCode}" not found. Please check with your teacher.`);
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                 }
             }, 1000);
         });
         
-        // Register student with teacher dashboard
+        // Register student with school
         function registerStudent() {
             const data = getSharedData();
             data.students = data.students || {};
             data.students[currentStudent.id] = currentStudent;
             
-            // Ensure the class exists in classes object
-            if (!data.classes) data.classes = {};
-            if (!data.classes[currentClassCode]) {
-                data.classes[currentClassCode] = {
-                    name: `Class ${currentClassCode}`,
-                    created: Date.now(),
-                    autoCreated: true
-                };
-            }
-            
             // Log the connection
             if (!data.activityLogs) data.activityLogs = {};
             if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
             data.activityLogs[studentId].push({
-                action: 'Student connected to class',
+                action: 'Student connected to school',
                 timestamp: Date.now()
             });
             
@@ -1527,8 +1555,11 @@
             document.getElementById('authContainer').style.display = 'none';
             document.getElementById('studentBrowser').style.display = 'flex';
             document.getElementById('studentNameDisplay').textContent = currentStudent.name;
-            document.getElementById('studentAvatar').textContent = currentStudent.name.charAt(0).toUpperCase();
-            document.getElementById('classCodeDisplay').textContent = currentClassCode;
+            document.getElementById('studentAvatar').textContent = currentStudent.firstName.charAt(0).toUpperCase();
+            document.getElementById('schoolCodeDisplay').textContent = currentSchoolCode;
+            
+            // Update class status
+            updateClassStatus();
             
             // Initialize tabs
             initializeTabs();
@@ -1544,6 +1575,26 @@
             
             // Start automatic screenshots
             startAutomaticScreenshots();
+        }
+        
+        // Update class status display
+        function updateClassStatus() {
+            const classStatusElement = document.getElementById('classStatus');
+            const browserStatusElement = document.getElementById('browserStatusMessage');
+            
+            if (currentClassCode) {
+                const data = getSharedData();
+                const classItem = data.classes[currentClassCode];
+                const className = classItem ? classItem.name : currentClassCode;
+                
+                classStatusElement.textContent = `Class: ${className}`;
+                classStatusElement.className = 'class-status status-active';
+                browserStatusElement.textContent = `You are in an active class. Class and school restrictions apply.`;
+            } else {
+                classStatusElement.textContent = 'No Active Class';
+                classStatusElement.className = 'class-status status-inactive';
+                browserStatusElement.textContent = 'You can browse the web freely. School-wide restrictions apply.';
+            }
         }
         
         // Initialize tabs
@@ -1765,11 +1816,9 @@
             
             // Check if browser is locked
             const data = getSharedData();
-            const classSettings = data.classSettings && data.classSettings[currentClassCode] ? 
-                data.classSettings[currentClassCode] : { allowBrowsing: true };
             const studentLocked = data.studentLocks && data.studentLocks[studentId];
             
-            if (classSettings.allowBrowsing === false || studentLocked) {
+            if (studentLocked) {
                 showLockedMessage(tabIndex);
                 return;
             }
@@ -1783,14 +1832,47 @@
             const domain = extractDomain(fullUrl);
             
             // Check if website is blocked
-            const blockingEnabled = classSettings.blockingEnabled !== false;
-            if (blockingEnabled && isUrlBlocked(domain)) {
+            if (isUrlBlocked(domain)) {
                 showBlockedMessage(domain, tabIndex);
                 return;
             }
             
             // Load website
             loadWebsiteDirectly(url, tabIndex);
+        }
+        
+        // Check if URL is blocked based on current restrictions
+        function isUrlBlocked(domain) {
+            const data = getSharedData();
+            
+            // Get school settings
+            const school = Object.values(data.schools).find(s => s.schoolCode === currentSchoolCode);
+            if (!school) return false;
+            
+            const schoolSettings = data.schoolSettings && data.schoolSettings[school.id];
+            if (!schoolSettings) return false;
+            
+            // Check school-wide blocked sites
+            const schoolBlockedSites = schoolSettings.blockedSites || [];
+            const isBlockedBySchool = schoolBlockedSites.some(site => 
+                domain.toLowerCase().includes(site.toLowerCase())
+            );
+            
+            // If not in a class, only apply school restrictions
+            if (!currentClassCode) {
+                return isBlockedBySchool;
+            }
+            
+            // If in a class, check class-specific restrictions
+            const classItem = data.classes[currentClassCode];
+            if (classItem && classItem.blockedSites) {
+                const isBlockedByClass = classItem.blockedSites.some(site => 
+                    domain.toLowerCase().includes(site.toLowerCase())
+                );
+                return isBlockedBySchool || isBlockedByClass;
+            }
+            
+            return isBlockedBySchool;
         }
         
         // Load website directly without CORS proxy
@@ -1817,7 +1899,8 @@
             if (!sharedData.activityLogs[studentId]) sharedData.activityLogs[studentId] = [];
             sharedData.activityLogs[studentId].push({
                 action: `Visited ${getWebsiteName(domain)} (${url})`,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                classCode: currentClassCode
             });
             
             // Update student data
@@ -1934,7 +2017,7 @@
             blockedMessage.innerHTML = `
                 <div class="message-icon">🚫</div>
                 <h2>Website Blocked</h2>
-                <p>This website has been restricted by your teacher.</p>
+                <p>This website has been restricted by your ${currentClassCode ? 'teacher' : 'school'}.</p>
                 <p style="font-family: monospace; margin: 10px 0; font-size: 1.1rem;">${url}</p>
                 <button class="btn" onclick="goHomeTab(${tabIndex})" style="margin-top: 20px;">Return to Safe Browsing</button>
             `;
@@ -2049,6 +2132,7 @@
             currentStudent.lastActive = Date.now();
             currentStudent.bypassActive = bypassActive;
             currentStudent.connectionCode = connectionCode;
+            currentStudent.classCode = currentClassCode;
             
             // Update in shared data
             const data = getSharedData();
@@ -2108,13 +2192,6 @@
         function showConnectionPage() {
             document.getElementById('studentBrowser').style.display = 'none';
             document.getElementById('connectionContainer').style.display = 'flex';
-            
-            // Generate a connection code if one doesn't exist
-            if (!connectionCode) {
-                generateConnectionCode();
-            } else {
-                document.getElementById('connectionCodeDisplay').textContent = connectionCode;
-            }
         }
         
         function exitConnectionPage() {
@@ -2122,98 +2199,56 @@
             document.getElementById('studentBrowser').style.display = 'flex';
         }
         
-        function generateConnectionCode() {
-            // Generate a random 8-character alphanumeric code
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let code = '';
-            for (let i = 0; i < 8; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
+        function connectToClass() {
+            const classCode = document.getElementById('classConnectionCode').value.trim().toUpperCase();
+            
+            if (!classCode) {
+                showConnectionStatus('Please enter a class code', 'error');
+                return;
             }
             
-            connectionCode = code;
-            document.getElementById('connectionCodeDisplay').textContent = code;
+            const data = getSharedData();
+            const classExists = data.classes && data.classes[classCode];
             
-            // Update student data with connection code
-            updateStudentTabs();
-            
-            // Show success message
+            if (classExists) {
+                // Connect to class
+                currentClassCode = classCode;
+                currentStudent.classCode = classCode;
+                
+                // Update student data
+                updateStudentTabs();
+                
+                // Update display
+                updateClassStatus();
+                
+                // Show success message
+                showConnectionStatus('Successfully connected to class!', 'success');
+                
+                // Log the connection
+                if (!data.activityLogs) data.activityLogs = {};
+                if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
+                data.activityLogs[studentId].push({
+                    action: `Connected to class ${classCode}`,
+                    timestamp: Date.now()
+                });
+                
+                saveSharedData(data);
+                
+                // Return to browser after 2 seconds
+                setTimeout(() => {
+                    exitConnectionPage();
+                }, 2000);
+            } else {
+                showConnectionStatus('Class code not found. Please check with your teacher.', 'error');
+            }
+        }
+        
+        function showConnectionStatus(message, type) {
             const statusElement = document.getElementById('connectionStatusMessage');
-            statusElement.textContent = 'Connection code generated successfully!';
-            statusElement.style.background = 'var(--success)';
+            statusElement.textContent = message;
+            statusElement.style.background = type === 'success' ? 'var(--success)' : 'var(--danger)';
             statusElement.style.color = 'white';
             statusElement.style.display = 'block';
-            
-            // Log the connection code generation
-            const data = getSharedData();
-            if (!data.activityLogs) data.activityLogs = {};
-            if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
-            data.activityLogs[studentId].push({
-                action: 'Generated connection code',
-                timestamp: Date.now(),
-                code: connectionCode
-            });
-            
-            saveSharedData(data);
-            
-            // Auto-hide message after 3 seconds
-            setTimeout(() => {
-                statusElement.style.display = 'none';
-            }, 3000);
-        }
-        
-        function copyConnectionCode() {
-            if (!connectionCode) return;
-            
-            // Use the Clipboard API if available
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(connectionCode).then(() => {
-                    const statusElement = document.getElementById('connectionStatusMessage');
-                    statusElement.textContent = 'Connection code copied to clipboard!';
-                    statusElement.style.background = 'var(--success)';
-                    statusElement.style.color = 'white';
-                    statusElement.style.display = 'block';
-                    
-                    setTimeout(() => {
-                        statusElement.style.display = 'none';
-                    }, 3000);
-                }).catch(err => {
-                    console.error('Failed to copy: ', err);
-                    fallbackCopyToClipboard();
-                });
-            } else {
-                fallbackCopyToClipboard();
-            }
-        }
-        
-        function fallbackCopyToClipboard() {
-            const textArea = document.createElement('textarea');
-            textArea.value = connectionCode;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                const statusElement = document.getElementById('connectionStatusMessage');
-                statusElement.textContent = 'Connection code copied to clipboard!';
-                statusElement.style.background = 'var(--success)';
-                statusElement.style.color = 'white';
-                statusElement.style.display = 'block';
-                
-                setTimeout(() => {
-                    statusElement.style.display = 'none';
-                }, 3000);
-            } catch (err) {
-                console.error('Fallback: Oops, unable to copy', err);
-                const statusElement = document.getElementById('connectionStatusMessage');
-                statusElement.textContent = 'Failed to copy code to clipboard';
-                statusElement.style.background = 'var(--danger)';
-                statusElement.style.color = 'white';
-                statusElement.style.display = 'block';
-                
-                setTimeout(() => {
-                    statusElement.style.display = 'none';
-                }, 3000);
-            }
-            document.body.removeChild(textArea);
         }
         
         // Bypass code functionality
@@ -2420,7 +2455,13 @@
             // Draw student info
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 16px Arial';
-            ctx.fillText(`${currentStudent.name} - ${currentClassCode}`, 20, 40);
+            ctx.fillText(`${currentStudent.name} - ${currentSchoolCode}`, 20, 40);
+            
+            // Draw class status
+            if (currentClassCode) {
+                ctx.font = '12px Arial';
+                ctx.fillText(`Class: ${currentClassCode}`, 20, 60);
+            }
             
             // Draw tab bar
             ctx.fillStyle = '#f1f3f4';
@@ -2506,8 +2547,11 @@
             ctx.fillStyle = '#ffffff';
             ctx.font = '12px Arial';
             ctx.fillText(`Student: ${currentStudent.name}`, width - 280, height - 40);
-            ctx.fillText(`Class: ${currentStudent.classCode}`, width - 280, height - 20);
-            ctx.fillText(`Time: ${new Date().toLocaleTimeString()}`, width - 140, height - 20);
+            ctx.fillText(`School: ${currentSchoolCode}`, width - 280, height - 20);
+            if (currentClassCode) {
+                ctx.fillText(`Class: ${currentClassCode}`, width - 140, height - 20);
+            }
+            ctx.fillText(`Time: ${new Date().toLocaleTimeString()}`, width - 140, height - 40);
         }
         
         // Whiteboard functions
@@ -2662,19 +2706,15 @@
         // Utility functions
         function getSharedData() {
             const defaultData = {
-                students: {},
+                schools: {},
+                teachers: {},
+                parents: {},
                 classes: {},
-                blockedSites: [
-                    'youtube.com', 'facebook.com', 'tiktok.com', 'instagram.com', 
-                    'netflix.com', 'twitter.com', 'snapchat.com', 'reddit.com', 
-                    'twitch.tv', 'porn', 'xxx', 'adult', 'gambling'
-                ],
-                classSettings: {},
-                teacherControl: {},
-                messages: {},
-                studentLocks: {},
-                screenshots: {},
+                students: {},
+                parentCodes: {},
                 bypassCodes: {},
+                schedules: {},
+                schoolSettings: {},
                 activityLogs: {},
                 lastUpdated: Date.now()
             };
@@ -2711,16 +2751,6 @@
                 const match = url.match(/(?:https?:\/\/)?(?:www\.)?([^\/]+)/i);
                 return match ? match[1] : url;
             }
-        }
-        
-        function isUrlBlocked(domain) {
-            const data = getSharedData();
-            const blockedSites = data.blockedSites || [];
-            
-            return blockedSites.some(site => {
-                return domain.toLowerCase().includes(site.toLowerCase()) || 
-                       site.toLowerCase().includes(domain.toLowerCase());
-            });
         }
         
         function getWebsiteName(domain) {
@@ -2844,6 +2874,7 @@
             document.getElementById('authForm').reset();
             currentStudent = null;
             studentId = null;
+            currentSchoolCode = '';
             currentClassCode = '';
             tabs = [];
             activeTabIndex = 0;
