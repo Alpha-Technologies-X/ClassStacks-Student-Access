@@ -499,6 +499,7 @@
             border-radius: 20px;
             font-size: 0.8rem;
             z-index: 1000;
+            display: none;
         }
         
         /* Screenshot Overlay */
@@ -585,6 +586,17 @@
             font-weight: 600;
             display: none;
         }
+        
+        /* Connection Status Banner */
+        .connection-banner {
+            background: var(--success);
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -632,6 +644,11 @@
 
     <!-- Student Browser -->
     <div class="student-browser" id="studentBrowser">
+        <!-- Connection Status Banner -->
+        <div class="connection-banner" id="connectionBanner">
+            ✅ Successfully connected to school: <span id="connectedSchoolName">School Name</span>
+        </div>
+        
         <!-- Active Class Banner -->
         <div class="active-class-banner" id="activeClassBanner">
             🎯 Active Class: <span id="activeClassName">Class Name</span>
@@ -647,9 +664,7 @@
                     <span class="class-status status-inactive" id="classStatus">No Active Class</span>
                 </div>
             </div>
-            <div>
-                <button class="btn btn-danger" onclick="logout()" style="padding: 8px 15px;">Exit Browser</button>
-            </div>
+            <!-- Removed Exit Browser button -->
         </div>
         
         <!-- Tab Bar -->
@@ -987,6 +1002,10 @@
             document.getElementById('studentAvatar').textContent = currentStudent.firstName.charAt(0).toUpperCase();
             document.getElementById('schoolCodeDisplay').textContent = currentSchoolCode;
             
+            // Show connection banner
+            document.getElementById('connectionBanner').style.display = 'block';
+            document.getElementById('connectedSchoolName').textContent = currentSchoolCode;
+            
             // Update class status
             updateClassStatus();
             
@@ -1004,6 +1023,14 @@
             
             // Start automatic screenshots
             startAutomaticScreenshots();
+            
+            // Show connection status
+            document.getElementById('connectionStatus').style.display = 'block';
+            
+            // Hide connection banner after 5 seconds
+            setTimeout(() => {
+                document.getElementById('connectionBanner').style.display = 'none';
+            }, 5000);
         }
         
         // Update class status display
@@ -2089,46 +2116,7 @@
             }, 3000);
         }
         
-        function logout() {
-            if (currentStudent) {
-                // Mark student as inactive
-                const data = getSharedData();
-                if (data.students[currentStudent.id]) {
-                    data.students[currentStudent.id].active = false;
-                    
-                    // Log the disconnection
-                    if (!data.activityLogs) data.activityLogs = {};
-                    if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
-                    data.activityLogs[studentId].push({
-                        action: 'Student disconnected',
-                        timestamp: Date.now()
-                    });
-                    
-                    saveSharedData(data);
-                }
-                
-                // Stop monitoring and screenshots
-                if (updateInterval) {
-                    clearInterval(updateInterval);
-                }
-                if (screenshotInterval) {
-                    clearInterval(screenshotInterval);
-                }
-            }
-            
-            localStorage.removeItem('currentStudent');
-            document.getElementById('studentBrowser').style.display = 'none';
-            document.getElementById('authContainer').style.display = 'flex';
-            document.getElementById('authForm').reset();
-            currentStudent = null;
-            studentId = null;
-            currentSchoolCode = '';
-            currentClassCode = '';
-            tabs = [];
-            activeTabIndex = 0;
-            bypassActive = false;
-            bypassExpiry = 0;
-        }
+        // Removed logout function since students can no longer exit the browser
         
         // Placeholder functions for features not implemented in this version
         function showWhiteboard() {
