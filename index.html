@@ -939,11 +939,28 @@
             // Check if school code exists
             setTimeout(() => {
                 const data = getSharedData();
-                const schoolExists = Object.values(data.schools).find(school => 
-                    school.schoolCode === schoolCode
-                );
                 
-                if (schoolExists) {
+                // First check connection codes
+                let validCode = false;
+                let schoolName = '';
+                
+                // Check connection codes
+                Object.values(data.connectionCodes || {}).forEach(code => {
+                    if (code.code === schoolCode && Date.now() < code.expiry) {
+                        validCode = true;
+                        schoolName = code.school;
+                    }
+                });
+                
+                // Also check school codes directly
+                Object.values(data.schools || {}).forEach(school => {
+                    if (school.schoolCode === schoolCode) {
+                        validCode = true;
+                        schoolName = school.name;
+                    }
+                });
+                
+                if (validCode) {
                     // School code is valid - create student session
                     const studentName = `${firstName} ${lastName}`;
                     studentId = 'student_' + btoa(studentName + schoolCode).replace(/[^a-zA-Z0-9]/g, '');
@@ -955,6 +972,7 @@
                         lastName: lastName,
                         name: studentName,
                         schoolCode: schoolCode,
+                        schoolName: schoolName,
                         classCode: '',
                         lastActive: Date.now(),
                         device: getDeviceInfo(),
@@ -970,7 +988,7 @@
                     localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
                     showStudentBrowser();
                 } else {
-                    showError(`School code "${schoolCode}" not found. Please check with your teacher.`);
+                    showError(`School code "${schoolCode}" not found or expired. Please check with your teacher.`);
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                 }
@@ -1004,7 +1022,7 @@
             
             // Show connection banner
             document.getElementById('connectionBanner').style.display = 'block';
-            document.getElementById('connectedSchoolName').textContent = currentSchoolCode;
+            document.getElementById('connectedSchoolName').textContent = currentStudent.schoolName || currentSchoolCode;
             
             // Update class status
             updateClassStatus();
@@ -1020,9 +1038,6 @@
             
             // Start monitoring for teacher commands
             startStudentMonitoring();
-            
-            // Start automatic screenshots
-            startAutomaticScreenshots();
             
             // Show connection status
             document.getElementById('connectionStatus').style.display = 'block';
@@ -1307,10 +1322,28 @@
             const data = getSharedData();
             
             // Get school settings
-            const school = Object.values(data.schools).find(s => s.schoolCode === currentSchoolCode);
-            if (!school) return false;
+            let schoolSettings = null;
             
-            const schoolSettings = data.schoolSettings && data.schoolSettings[school.id];
+            // Find school by code
+            Object.values(data.schools || {}).forEach(school => {
+                if (school.schoolCode === currentSchoolCode) {
+                    schoolSettings = data.schoolSettings && data.schoolSettings[school.id];
+                }
+            });
+            
+            // Also check connection codes
+            if (!schoolSettings) {
+                // Check if there's a connection code for this school
+                Object.values(data.connectionCodes || {}).forEach(code => {
+                    if (code.code === currentSchoolCode) {
+                        // Use default settings for connection codes
+                        schoolSettings = {
+                            blockedSites: ['youtube.com', 'facebook.com', 'instagram.com', 'tiktok.com']
+                        };
+                    }
+                });
+            }
+            
             if (!schoolSettings) return false;
             
             // Check school-wide blocked sites
@@ -1482,8 +1515,19 @@
             
             tabContent.appendChild(blockedMessage);
             
+            // Log the blocked attempt
+            const sharedData = getSharedData();
+            if (!sharedData.activityLogs) sharedData.activityLogs = {};
+            if (!sharedData.activityLogs[studentId]) sharedData.activityLogs[studentId] = [];
+            sharedData.activityLogs[studentId].push({
+                action: `Blocked website: ${url}`,
+                timestamp: Date.now(),
+                classCode: currentClassCode
+            });
+            
             // Update student data
             updateStudentTabs();
+            saveSharedData(sharedData);
         }
         
         // Show locked message
@@ -1601,15 +1645,9 @@
         
         // Start activity reporting
         function startActivityReporting() {
-            setInterval(() => {
+            updateInterval = setInterval(() => {
                 reportStudentActivity();
             }, 5000);
-        }
-        
-        function startAutomaticScreenshots() {
-            screenshotInterval = setInterval(() => {
-                takeAutomaticScreenshot();
-            }, 2500);
         }
         
         function reportStudentActivity() {
@@ -1693,7 +1731,8 @@
             }
             
             const data = getSharedData();
-            const bypassCode = data.bypassCodes && data.bypassCodes[code];
+            const bypassCodes = data.bypassCodes || {};
+            const bypassCode = bypassCodes[code];
             
             if (bypassCode && !isBypassCodeExpired(bypassCode) && !isBypassCodeUsedUp(bypassCode)) {
                 // Valid bypass code
@@ -1803,35 +1842,7 @@
             }
         }
         
-        // Take automatic screenshot
-        function takeAutomaticScreenshot() {
-            if (!studentId) return;
-            
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            
-            // Set canvas size to match browser content
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            
-            // Draw browser representation
-            drawBrowserRepresentation(context, canvas.width, canvas.height);
-            
-            // Convert to data URL and save
-            const imageData = canvas.toDataURL('image/png');
-            
-            const data = getSharedData();
-            if (!data.screenshots) data.screenshots = {};
-            data.screenshots[studentId] = {
-                imageData: imageData,
-                timestamp: Date.now(),
-                requested: false
-            };
-            
-            saveSharedData(data);
-        }
-        
-        // Take manual screenshot (when requested by teacher)
+        // Take screenshot (when requested by teacher)
         function takeScreenshot() {
             const canvas = document.getElementById('screenshotCanvas');
             const context = canvas.getContext('2d');
@@ -1858,6 +1869,8 @@
             
             // Hide overlay
             document.getElementById('screenshotOverlay').style.display = 'none';
+            
+            showSuccess('Screenshot sent to teacher!');
         }
         
         function cancelScreenshot() {
@@ -1983,14 +1996,17 @@
             const defaultData = {
                 schools: {},
                 teachers: {},
-                parents: {},
                 classes: {},
                 students: {},
-                parentCodes: {},
-                bypassCodes: {},
                 schedules: {},
                 schoolSettings: {},
                 activityLogs: {},
+                messages: {},
+                teacherControl: {},
+                studentLocks: {},
+                screenshots: {},
+                connectionCodes: {},
+                bypassCodes: {},
                 lastUpdated: Date.now()
             };
             
